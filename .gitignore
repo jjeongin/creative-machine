@@ -1,5 +1,6 @@
 .gradle
 .idea
+bin
 build
 out
 hs_err_pid*.log
