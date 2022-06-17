@@ -3,8 +3,8 @@ plugins {
     id 'org.bytedeco.gradle-javacpp-platform' version "1.5.7"
 }
 
-group 'ch.bildspur'
-version '0.8.1'
+group 'gsoc.ml'
+version '0.0.1'
 
 sourceCompatibility = 1.8
 
@@ -12,7 +12,6 @@ repositories {
     mavenCentral()
     mavenLocal()
     maven { url 'https://jitpack.io' }
-    // flatDir dirs: "${rootDir}/libs"
 }
 
 configurations {
@@ -29,24 +28,28 @@ javadoc {
 
 dependencies {
     // compile
-    testImplementation group: 'junit', name: 'junit', version: '4.11'
-    testImplementation 'com.github.cansik:webcam-capture-processing:8f1ea8d38d'
+    // testImplementation group: 'junit', name: 'junit', version: '4.11'
+    // testImplementation 'com.github.cansik:webcam-capture-processing:8f1ea8d38d'
 
     // opencv (make sure you have updated the local maven repo: mvn -U compile)
-    implementation (group: 'org.bytedeco', name: 'javacv', version: "1.5.7"){
-        exclude group: 'org.bytedeco', module: 'librealsense2'
-        exclude group: 'org.bytedeco', module: 'librealsense2-platform'
-    }
+    // implementation (group: 'org.bytedeco', name: 'javacv', version: "1.5.7"){
+    //     exclude group: 'org.bytedeco', module: 'librealsense2'
+    //     exclude group: 'org.bytedeco', module: 'librealsense2-platform'
+    // }
 
-    implementation group: 'org.bytedeco', name: 'opencv-platform', version: "4.5.5-1.5.7"
-    implementation group: 'org.bytedeco', name: 'openblas-platform', version: "0.3.19-1.5.7"
-    implementation group: 'org.bytedeco', name: 'tesseract-platform', version: "5.0.1-1.5.7"
+    // implementation group: 'org.bytedeco', name: 'opencv-platform', version: "4.5.5-1.5.7"
+    // implementation group: 'org.bytedeco', name: 'openblas-platform', version: "0.3.19-1.5.7"
+    // implementation group: 'org.bytedeco', name: 'tesseract-platform', version: "5.0.1-1.5.7"
 
     // cuda additions
-    if (project.hasProperty("cuda")) {
-        implementation group: 'org.bytedeco', name: 'opencv-platform-gpu', version: "4.5.5-1.5.7"
-        implementation group: 'org.bytedeco', name: 'cuda-platform-redist', version: "11.6-8.3-1.5.7"
-    }
+    // if (project.hasProperty("cuda")) {
+    //     implementation group: 'org.bytedeco', name: 'opencv-platform-gpu', version: "4.5.5-1.5.7"
+    //     implementation group: 'org.bytedeco', name: 'cuda-platform-redist', version: "11.6-8.3-1.5.7"
+    // }
+
+
+    // tensorflow
+    implementation group: 'org.tensorflow', name: 'tensorflow-core-platform', version: '0.4.1'
 
     // processing
     implementation fileTree(include: ["core.jar", "jogl-all-main.jar", "gluegen-rt-main.jar"], dir: 'core-libs')
@@ -59,11 +62,6 @@ task fatJar(type: Jar) {
     archiveFileName = "$outputName-complete.jar"
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     dependsOn configurations.runtimeClasspath
-    // from {
-    //     (configurations.runtime - configurations.processing).collect {
-    //         it.isDirectory() ? it : zipTree(it)
-    //     }
-    // }
 
     from { 
         (configurations.runtimeClasspath - configurations.processing).filter( {! (it.name =~ /core.jar/ || 
