@@ -1,5 +1,8 @@
-package gsoc.ml;
+// Use this package name when debugging from IntelliJ
+package main.java.gsoc.ml;
 
+// Use this package name when building with gradle to release the library
+//package gsoc.ml;
 
 import processing.core.*;
 import org.tensorflow.*;
@@ -43,8 +46,8 @@ public class MLTest {
 	}
 	
 	
-	public String sayHello() {
-		return "TensorFlow version " + TensorFlow.version();
+	public String getTensorFlowVersion() {
+		return TensorFlow.version();
 	}
 	/**
 	 * return the version of the Library.
