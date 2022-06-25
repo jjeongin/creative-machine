@@ -56,6 +56,13 @@ dependencies {
     // processing group: 'org.processing', name: 'core', version: '3.3.7'
     // processing group: 'org.jogamp.jogl', name: 'jogl-all-main', version: '2.3.2'
     // processing group: 'org.jogamp.gluegen', name: 'gluegen-rt-main', version: '2.3.2'
+
+    // deep java library
+    implementation fileTree(include: ["api-0.17.0.jar", "tensorflow-engine-0.17.0.jar",
+                                      "commons-compress-1.21.jar", "tensorflow-model-zoo-0.17.0.jar",
+                                      "gson-2.9.0.jar", "tensorflow-native-cpu-2.7.0-osx-x86_64.jar",
+                                      "jna-5.11.0.jar", "tensorflow-native-cpu-2.7.0.jar",
+                                      "slf4j-api-2.0.0-alpha7.jar"], dir: 'djl-libs')
 }
 
 task fatJar(type: Jar) {
