@@ -1,4 +1,4 @@
-import ml.model.*;
+import ml.model.ObjectDetector.*;
 
 ObjectDetectorDJL detectorDJL;
 String outputName;
@@ -10,12 +10,8 @@ void setup() {
     PImage img = loadImage(imgPath + "dog_bike_car.jpeg");
 
     // run object detection
-    DetectedObjects detected = detectorDJL.detect(img);
-
-    // draw bounding boxes on original image
-    outputName = "dog_bike_car_output.png";
-    detectorDJL.saveBoundingBoxImage(imgPath, outputName, img, detected);
-
+    outputName = "output.png";
+    String detected = detectorDJL.detect(img, true, outputName);
     println("Detected objects: " + detected);
 }
 
