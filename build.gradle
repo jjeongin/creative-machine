@@ -1,10 +1,11 @@
 plugins {
+    id 'java'
     id 'java-library'
     id 'org.bytedeco.gradle-javacpp-platform' version "1.5.7"
 }
 
-group 'gsoc.ml'
-version '0.0.1'
+group 'ml'
+version "$versionString"
 
 sourceCompatibility = 1.8
 
@@ -49,7 +50,33 @@ dependencies {
 
 
     // tensorflow
-    implementation group: 'org.tensorflow', name: 'tensorflow-core-platform', version: '0.4.1'
+    // implementation group: 'org.tensorflow', name: 'tensorflow-core-platform', version: '0.4.1'
+
+    // DLJ
+    implementation group: 'ai.djl', name: 'api', version: '0.17.0'
+    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-api', version: '0.17.0'
+    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-engine', version: '0.17.0'
+    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-model-zoo', version: '0.17.0'
+
+    // ???
+    // implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-auto', version: '2.4.1'
+        
+    // DLJ tensorflow engine: http://djl.ai/engines/tensorflow/tensorflow-engine/
+    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: '2.7.0'
+    // implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: '2.7.0', classifier: 'osx-x86_64'
+    // implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: '2.7.0', classifier: 'linux-x86_64'
+    // implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: '2.7.0', classifier: 'win-x86_64'
+
+    // GPU support
+    // implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cu113', version: '2.7.0', classifier: 'linux-x86_64'
+    // implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cu113', version: '2.7.0', classifier: 'win-x86_64'    
+    
+
+
+    // implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cu113', version: '2.7.0'
+
+    implementation group: 'org.slf4j', name: 'slf4j-simple', version: '2.0.0-alpha7'
+    
 
     // processing
     implementation fileTree(include: ["core.jar", "jogl-all-main.jar", "gluegen-rt-main.jar"], dir: 'core-libs')
@@ -58,11 +85,11 @@ dependencies {
     // processing group: 'org.jogamp.gluegen', name: 'gluegen-rt-main', version: '2.3.2'
 
     // deep java library
-    implementation fileTree(include: ["api-0.17.0.jar", "tensorflow-engine-0.17.0.jar",
-                                      "commons-compress-1.21.jar", "tensorflow-model-zoo-0.17.0.jar",
-                                      "gson-2.9.0.jar", "tensorflow-native-cpu-2.7.0-osx-x86_64.jar",
-                                      "jna-5.11.0.jar", "tensorflow-native-cpu-2.7.0.jar",
-                                      "slf4j-api-2.0.0-alpha7.jar"], dir: 'djl-libs')
+    // implementation fileTree(include: ["api-0.17.0.jar", "tensorflow-engine-0.17.0.jar",
+    //                                   "commons-compress-1.21.jar", "tensorflow-model-zoo-0.17.0.jar",
+    //                                   "gson-2.9.0.jar", "tensorflow-native-cpu-2.7.0-osx-x86_64.jar",
+    //                                   "jna-5.11.0.jar", "tensorflow-native-cpu-2.7.0.jar",
+    //                                   "slf4j-api-2.0.0-alpha7.jar"], dir: 'djl-libs')
 }
 
 task fatJar(type: Jar) {

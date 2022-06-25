@@ -1,4 +1,4 @@
-import ml.model.ObjectDetector.*;
+import ml.*;
 
 ObjectDetectorDJL detectorDJL;
 String outputName;

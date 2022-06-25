@@ -53,7 +53,7 @@ task releaseProcessingLib {
                 into "$releaseDirectory/library"
             }
 
-            // Need to delete the Processing jar explicilty, at least when including them as fileTree dependencies
+            // Need to delete the Processing jar explicitly, at least when including them as fileTree dependencies
             delete "$releaseDirectory/library/core.jar"
             delete "$releaseDirectory/library/jogl-all-main.jar"
             delete "$releaseDirectory/library/gluegen-rt-main.jar"            
@@ -66,6 +66,14 @@ task releaseProcessingLib {
             }
         }
 
+        println "copy libraries..."
+        project.copy {
+            from("$releaseDirectory/library") {
+                include "*.jar"
+            }
+            into "djl-libs"
+            exclude "${outputName}.jar"
+        }
 
         println "copy assets (only if necessary)..."
         project.copy {
@@ -101,9 +109,34 @@ task releaseProcessingLib {
             from "$rootDir/library.properties"
             into "$releaseRoot"
             rename "library.properties", "${outputName}.txt"
+            filter {
+                String line -> line.replaceAll("prettyVersion=", "prettyVersion=$versionString")
+            }
+            filter {
+                String line -> line.replaceAll("version=", "version=$versionNumber")
+            }            
+        }
+
+        if (project.hasProperty("sketchbookDirectory")) {
+            println "copying to sketchbook..."
+
+            def installDirectory = "$sketchbookDirectory/libraries/$outputName"
+            project.copy {
+                from("$releaseDirectory") {
+                    include "library.properties",
+                            "examples/**",
+                            "library/**",
+                            "reference/**",
+                            "src/**"
+                }
+                into "$installDirectory"
+            }
         }
     }
 }
+
+// task copyProperties(type: Copy) {
+// }
 
 task packageRelease(type: Zip) {
     mustRunAfter releaseProcessingLib
