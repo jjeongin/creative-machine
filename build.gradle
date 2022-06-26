@@ -53,13 +53,13 @@ dependencies {
         
     // DLJ tensorflow engine: http://djl.ai/engines/tensorflow/tensorflow-engine/
     implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: "$djlTensorflowNativeVersion"
-    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: '2.7.0', classifier: 'osx-x86_64'
-    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: '2.7.0', classifier: 'linux-x86_64'
-    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: '2.7.0', classifier: 'win-x86_64'
+    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: "$djlTensorflowNativeVersion", classifier: 'osx-x86_64'
+    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: "$djlTensorflowNativeVersion", classifier: 'linux-x86_64'
+    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: "$djlTensorflowNativeVersion", classifier: 'win-x86_64'
 
     // GPU support
-    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cu113', version: '2.7.0', classifier: 'linux-x86_64'
-    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cu113', version: '2.7.0', classifier: 'win-x86_64'    
+    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cu113', version: "$djlTensorflowNativeVersion", classifier: 'linux-x86_64'
+    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cu113', version: "$djlTensorflowNativeVersion", classifier: 'win-x86_64'    
     
     // deep java library
     // implementation fileTree(include: ["api-0.17.0.jar", "tensorflow-engine-0.17.0.jar",
