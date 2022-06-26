@@ -71,7 +71,7 @@ task releaseProcessingLib {
             from("$releaseDirectory/library") {
                 include "*.jar"
             }
-            into "djl-libs"
+            into "libs"
             exclude "${outputName}.jar"
         }
 
@@ -109,18 +109,14 @@ task releaseProcessingLib {
             from "$rootDir/library.properties"
             into "$releaseRoot"
             rename "library.properties", "${outputName}.txt"
-            filter {
-                String line -> line.replaceAll("prettyVersion=", "prettyVersion=$versionString")
-            }
-            filter {
-                String line -> line.replaceAll("version=", "version=$versionNumber")
-            }            
+            filter { String line -> line.replaceAll("prettyVersion=", "prettyVersion=$propertiesPrettyVersion") }
+            filter { String line -> line.replaceAll("version=", "version=$propertiesVersion") }
         }
 
-        if (project.hasProperty("sketchbookDirectory")) {
+        if (project.hasProperty("sketchbookLocation")) {
             println "copying to sketchbook..."
 
-            def installDirectory = "$sketchbookDirectory/libraries/$outputName"
+            def installDirectory = "$sketchbookLocation/libraries/$outputName"
             project.copy {
                 from("$releaseDirectory") {
                     include "library.properties",

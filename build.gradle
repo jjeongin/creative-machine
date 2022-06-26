@@ -1,13 +1,13 @@
 plugins {
     id 'java'
     id 'java-library'
-    id 'org.bytedeco.gradle-javacpp-platform' version "1.5.7"
+    // id 'org.bytedeco.gradle-javacpp-platform' version "1.5.7"
 }
 
-group 'ml'
-version "$versionString"
+group "$packageName"
+version "$propertiesPrettyVersion"
 
-sourceCompatibility = 1.8
+sourceCompatibility = "$javaTargetVersion"
 
 repositories {
     mavenCentral()
@@ -28,6 +28,15 @@ javadoc {
 }
 
 dependencies {
+    // processing 4.0 beta
+    implementation fileTree(include: ["core.jar", "jogl-all-main.jar", "gluegen-rt-main.jar"], dir: "$classpathLocalLocation")
+
+    // processing 3 deps
+    // processing group: 'org.processing', name: 'core', version: '3.3.7'
+    // processing group: 'org.jogamp.jogl', name: 'jogl-all-main', version: '2.3.2'
+    // processing group: 'org.jogamp.gluegen', name: 'gluegen-rt-main', version: '2.3.2'
+
+
     // compile
     // testImplementation group: 'junit', name: 'junit', version: '4.11'
     // testImplementation 'com.github.cansik:webcam-capture-processing:8f1ea8d38d'
@@ -52,6 +61,8 @@ dependencies {
     // tensorflow
     // implementation group: 'org.tensorflow', name: 'tensorflow-core-platform', version: '0.4.1'
 
+    implementation group: 'org.slf4j', name: 'slf4j-simple', version: '2.0.0-alpha7'
+
     // DLJ
     implementation group: 'ai.djl', name: 'api', version: '0.17.0'
     implementation group: 'ai.djl.tensorflow', name: 'tensorflow-api', version: '0.17.0'
@@ -75,14 +86,6 @@ dependencies {
 
     // implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cu113', version: '2.7.0'
 
-    implementation group: 'org.slf4j', name: 'slf4j-simple', version: '2.0.0-alpha7'
-    
-
-    // processing
-    implementation fileTree(include: ["core.jar", "jogl-all-main.jar", "gluegen-rt-main.jar"], dir: 'core-libs')
-    // processing group: 'org.processing', name: 'core', version: '3.3.7'
-    // processing group: 'org.jogamp.jogl', name: 'jogl-all-main', version: '2.3.2'
-    // processing group: 'org.jogamp.gluegen', name: 'gluegen-rt-main', version: '2.3.2'
 
     // deep java library
     // implementation fileTree(include: ["api-0.17.0.jar", "tensorflow-engine-0.17.0.jar",
