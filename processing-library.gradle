@@ -97,7 +97,7 @@ task releaseProcessingLib {
         copyProperties("$releaseDirectory", "library.properties")
 
         if (project.hasProperty("sketchbookLocation")) {
-            println "copying to sketchbook..."
+            println "copy to sketchbook..."
             def sketchbookAbsolutePath = sketchbookLocation.replace("\${user.home}", System.properties['user.home'])
             def installDirectory = "$sketchbookAbsolutePath/libraries/$projectName"
             project.copy {
