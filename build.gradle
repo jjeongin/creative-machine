@@ -28,7 +28,7 @@ javadoc {
 }
 
 dependencies {
-    // processing 4.0 beta
+    // Processing jars from installed application package
     implementation fileTree(include: ["core.jar", "jogl-all-main.jar", "gluegen-rt-main.jar"], dir: "$classpathLocalLocation")
 
     // processing 3 deps
@@ -36,78 +36,37 @@ dependencies {
     // processing group: 'org.jogamp.jogl', name: 'jogl-all-main', version: '2.3.2'
     // processing group: 'org.jogamp.gluegen', name: 'gluegen-rt-main', version: '2.3.2'
 
-
-    // compile
+    // test??
     // testImplementation group: 'junit', name: 'junit', version: '4.11'
     // testImplementation 'com.github.cansik:webcam-capture-processing:8f1ea8d38d'
-
-    // opencv (make sure you have updated the local maven repo: mvn -U compile)
-    // implementation (group: 'org.bytedeco', name: 'javacv', version: "1.5.7"){
-    //     exclude group: 'org.bytedeco', module: 'librealsense2'
-    //     exclude group: 'org.bytedeco', module: 'librealsense2-platform'
-    // }
-
-    // implementation group: 'org.bytedeco', name: 'opencv-platform', version: "4.5.5-1.5.7"
-    // implementation group: 'org.bytedeco', name: 'openblas-platform', version: "0.3.19-1.5.7"
-    // implementation group: 'org.bytedeco', name: 'tesseract-platform', version: "5.0.1-1.5.7"
-
-    // cuda additions
-    // if (project.hasProperty("cuda")) {
-    //     implementation group: 'org.bytedeco', name: 'opencv-platform-gpu', version: "4.5.5-1.5.7"
-    //     implementation group: 'org.bytedeco', name: 'cuda-platform-redist', version: "11.6-8.3-1.5.7"
-    // }
-
 
     // tensorflow
     // implementation group: 'org.tensorflow', name: 'tensorflow-core-platform', version: '0.4.1'
 
-    implementation group: 'org.slf4j', name: 'slf4j-simple', version: '2.0.0-alpha7'
+    implementation group: 'org.slf4j', name: 'slf4j-simple', version: "$slf4jVersion"
 
     // DLJ
     implementation group: 'ai.djl', name: 'api', version: '0.17.0'
-    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-api', version: '0.17.0'
-    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-engine', version: '0.17.0'
-    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-model-zoo', version: '0.17.0'
-
-    // ???
-    // implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-auto', version: '2.4.1'
+    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-api', version: "$djlVersion"
+    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-engine', version: "$djlVersion"
+    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-model-zoo', version: "$djlVersion"
         
     // DLJ tensorflow engine: http://djl.ai/engines/tensorflow/tensorflow-engine/
-    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: '2.7.0'
-    // implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: '2.7.0', classifier: 'osx-x86_64'
-    // implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: '2.7.0', classifier: 'linux-x86_64'
-    // implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: '2.7.0', classifier: 'win-x86_64'
+    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: "$djlTensorflowNativeVersion"
+    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: '2.7.0', classifier: 'osx-x86_64'
+    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: '2.7.0', classifier: 'linux-x86_64'
+    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: '2.7.0', classifier: 'win-x86_64'
 
     // GPU support
-    // implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cu113', version: '2.7.0', classifier: 'linux-x86_64'
-    // implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cu113', version: '2.7.0', classifier: 'win-x86_64'    
+    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cu113', version: '2.7.0', classifier: 'linux-x86_64'
+    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cu113', version: '2.7.0', classifier: 'win-x86_64'    
     
-
-
-    // implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cu113', version: '2.7.0'
-
-
     // deep java library
     // implementation fileTree(include: ["api-0.17.0.jar", "tensorflow-engine-0.17.0.jar",
     //                                   "commons-compress-1.21.jar", "tensorflow-model-zoo-0.17.0.jar",
     //                                   "gson-2.9.0.jar", "tensorflow-native-cpu-2.7.0-osx-x86_64.jar",
     //                                   "jna-5.11.0.jar", "tensorflow-native-cpu-2.7.0.jar",
     //                                   "slf4j-api-2.0.0-alpha7.jar"], dir: 'djl-libs')
-}
-
-task fatJar(type: Jar) {
-    archiveFileName = "$projectName-complete.jar"
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    dependsOn configurations.runtimeClasspath
-
-    from { 
-        (configurations.runtimeClasspath - configurations.processing).filter( {! (it.name =~ /core.jar/ || 
-                                                                                  it.name =~ /jogl-all-main.jar/ || 
-                                                                                  it.name =~ /gluegen-rt-main.jar/)}).collect {
-            it.isDirectory() ? it : zipTree(it) 
-        }
-    }
-    with jar
 }
 
 // add processing library support

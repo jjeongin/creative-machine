@@ -9,11 +9,7 @@ task releaseProcessingLib {
         clean
         build
         javadoc
-        if (project.hasProperty("disable-fatjar")) {
-            jar
-        } else {
-            fatJar
-        }
+        jar
     }
 
     finalizedBy 'packageRelease', 'renameRelease'
@@ -40,31 +36,22 @@ task releaseProcessingLib {
     doLast {
         println "creating package..."
 
-        if (project.hasProperty("disable-fatjar")) {
-            println "copy library..."
-            project.copy {
-                from "$buildDir/libs/${projectName}.jar"
-                into "$releaseDirectory/library"
-            }
-
-            println "copy dependencies..."
-            project.copy {
-                from configurations.runtimeClasspath
-                into "$releaseDirectory/library"
-            }
-
-            // Need to delete the Processing jar explicitly, at least when including them as fileTree dependencies
-            delete "$releaseDirectory/library/core.jar"
-            delete "$releaseDirectory/library/jogl-all-main.jar"
-            delete "$releaseDirectory/library/gluegen-rt-main.jar"            
-        } else {
-            println "copy fatjar library..."
-            project.copy {
-                from "$buildDir/libs/$projectName-complete.jar"
-                into "$releaseDirectory/library"
-                rename "$projectName-complete.jar", "${projectName}.jar"
-            }
+        println "copy library..."
+        project.copy {
+            from "$buildDir/libs/${projectName}.jar"
+            into "$releaseDirectory/library"
         }
+
+        println "copy dependencies..."
+        project.copy {
+            from configurations.runtimeClasspath
+            into "$releaseDirectory/library"
+        }
+
+        // Need to delete the Processing jar explicitly, at least when including them as fileTree dependencies
+        delete "$releaseDirectory/library/core.jar"
+        delete "$releaseDirectory/library/jogl-all-main.jar"
+        delete "$releaseDirectory/library/gluegen-rt-main.jar"            
 
         println "copy libraries..."
         project.copy {
@@ -111,8 +98,8 @@ task releaseProcessingLib {
 
         if (project.hasProperty("sketchbookLocation")) {
             println "copying to sketchbook..."
-
-            def installDirectory = "$sketchbookLocation/libraries/$projectName"
+            def sketchbookAbsolutePath = sketchbookLocation.replace("\${user.home}", System.properties['user.home'])
+            def installDirectory = "$sketchbookAbsolutePath/libraries/$projectName"
             project.copy {
                 from("$releaseDirectory") {
                     include "library.properties",
