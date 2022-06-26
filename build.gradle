@@ -16,7 +16,7 @@ repositories {
 }
 
 configurations {
-    jar.archiveFileName = outputName + '.jar'
+    jar.archiveFileName = projectName + '.jar'
 
     processing
     compile.extendsFrom processing
@@ -96,7 +96,7 @@ dependencies {
 }
 
 task fatJar(type: Jar) {
-    archiveFileName = "$outputName-complete.jar"
+    archiveFileName = "$projectName-complete.jar"
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     dependsOn configurations.runtimeClasspath
 

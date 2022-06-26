@@ -1,7 +1,7 @@
 // This script adds processing library build support to gradle.
 def releaseRoot = "$rootDir/release"
 
-def releaseName = "$outputName$outputNamePostfix-$version"
+def releaseName = "$projectName-$version"
 def releaseDirectory = "$releaseRoot/$releaseName"
 
 task releaseProcessingLib {
@@ -19,15 +19,15 @@ task releaseProcessingLib {
     finalizedBy 'packageRelease', 'renameRelease'
 
     doFirst {
-        println "releasing library $outputName..."
+        println "releasing library $projectName..."
 
         // printing current jvm
         def currentJvm = org.gradle.internal.jvm.Jvm.current()
         println currentJvm
 
-        if (project.hasProperty("cuda")) {
-            println "CUDA support enabled!"
-        }
+        // if (project.hasProperty("cuda")) {
+        //     println "CUDA support enabled!"
+        // }
 
         println("cleaning release...")
         project.delete(files(
@@ -43,7 +43,7 @@ task releaseProcessingLib {
         if (project.hasProperty("disable-fatjar")) {
             println "copy library..."
             project.copy {
-                from "$buildDir/libs/${outputName}.jar"
+                from "$buildDir/libs/${projectName}.jar"
                 into "$releaseDirectory/library"
             }
 
@@ -60,9 +60,9 @@ task releaseProcessingLib {
         } else {
             println "copy fatjar library..."
             project.copy {
-                from "$buildDir/libs/$outputName-complete.jar"
+                from "$buildDir/libs/$projectName-complete.jar"
                 into "$releaseDirectory/library"
-                rename "$outputName-complete.jar", "${outputName}.jar"
+                rename "$projectName-complete.jar", "${projectName}.jar"
             }
         }
 
@@ -72,7 +72,7 @@ task releaseProcessingLib {
                 include "*.jar"
             }
             into "libs"
-            exclude "${outputName}.jar"
+            exclude "${projectName}.jar"
         }
 
         println "copy assets (only if necessary)..."
@@ -95,7 +95,6 @@ task releaseProcessingLib {
         project.copy {
             from("$rootDir") {
                 include "README.md",
-                        "library.properties",
                         "readme/**",
                         "examples/**",
                         "src/**"
@@ -105,18 +104,15 @@ task releaseProcessingLib {
         }
 
         println "copy repository library.txt..."
-        project.copy {
-            from "$rootDir/library.properties"
-            into "$releaseRoot"
-            rename "library.properties", "${outputName}.txt"
-            filter { String line -> line.replaceAll("prettyVersion=", "prettyVersion=$propertiesPrettyVersion") }
-            filter { String line -> line.replaceAll("version=", "version=$propertiesVersion") }
-        }
+        copyProperties("$releaseRoot", "${projectName}.txt")
+
+        println "copy repository library.properties..."
+        copyProperties("$releaseDirectory", "library.properties")
 
         if (project.hasProperty("sketchbookLocation")) {
             println "copying to sketchbook..."
 
-            def installDirectory = "$sketchbookLocation/libraries/$outputName"
+            def installDirectory = "$sketchbookLocation/libraries/$projectName"
             project.copy {
                 from("$releaseDirectory") {
                     include "library.properties",
@@ -129,17 +125,33 @@ task releaseProcessingLib {
             }
         }
     }
-}
 
-// task copyProperties(type: Copy) {
-// }
+    ext.copyProperties = { destDirectory, destFilename ->
+        project.copy {
+            from "$rootDir/library.properties"
+            into "$destDirectory"
+            rename "library.properties", "$destFilename"
+
+            filter { String line -> line.replaceAll("name=", "name=$propertiesName") }
+            filter { String line -> line.replaceAll("category=", "category=$propertiesCategory") }
+            filter { String line -> line.replaceAll("authors=", "authors=$propertiesAuthors") }
+            filter { String line -> line.replaceAll("url=", "url=$propertiesUrl") }
+            filter { String line -> line.replaceAll("sentence=", "sentence=$propertiesSentence") }
+            filter { String line -> line.replaceAll("paragraph=", "paragraph=$propertiesParagraph") }
+            filter { String line -> line.replaceAll("version=", "version=$propertiesVersion") }
+            filter { String line -> line.replaceAll("prettyVersion=", "prettyVersion=$propertiesPrettyVersion") }
+            filter { String line -> line.replaceAll("minRevision=", "minRevision=$propertiesMinRevision") }
+            filter { String line -> line.replaceAll("maxRevision=", "maxRevision=$propertiesMaxRevision") }
+        }
+    }
+}
 
 task packageRelease(type: Zip) {
     mustRunAfter releaseProcessingLib
 
-    archiveFileName = "${outputName}${outputNamePostfix}.zip"
+    archiveFileName = "${projectName}.zip"
     from "$releaseDirectory"
-    into "$outputName"
+    into "$projectName"
     destinationDirectory = file("$releaseRoot")
     exclude "**/*.DS_Store"
 }
