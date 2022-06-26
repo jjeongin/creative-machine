@@ -19,13 +19,13 @@ gradlew.bat releaseProcessingLib
 
 The library can be imported as an IntelliJ project following the steps below:
 
-- Download and install [IntelliJ IDEA](https://www.jetbrains.com/idea/download/)s
+- Download and install [IntelliJ IDEA](https://www.jetbrains.com/idea/download/)
 - Clone this repo and build the library following the instructions in the previous section
 - Clone the [processing4 repo](https://github.com/processing/processing4)
-- Create new project in IntelliJ with the name and location of your choice, e.g. ```ml-dev```
+- Create new project in IntelliJ with the name and location of your choice, for example ```ml-dev```
 - Create new module in the project for core Processing, using as content root and the module file location the ```core``` folder under the processing4 repo. As "JARs or Directory" dependency, add ```<path to processing4 repo>/core/library```
 - Create another module in the project, this time for ml4processing. Use the ml4processing's root folder as the content root and module file location. Add the processing-core module as module dependency for this module, and the ```libs``` subdirecotry inside the ml4processing directory (it should have been created during library building step) as itss "JARs or Directory" dependency
-- Add the proccessing-core and ml4processing modules as dependencies in the main module of the project (ml-dev)
+- Add the proccessing-core and ml4processing modules as dependencies in the main module of the project (```ml-dev```)
 - You can now create a test program in under the main module of the project, for example the following code will apply a pre-generated object detection model on an input image:
 
 ```
