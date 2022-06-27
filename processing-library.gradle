@@ -1,7 +1,7 @@
 // This script adds processing library build support to gradle.
 def releaseRoot = "$rootDir/release"
 
-def releaseName = "$outputName$outputNamePostfix-$version"
+def releaseName = "$projectName-$version"
 def releaseDirectory = "$releaseRoot/$releaseName"
 
 task releaseProcessingLib {
@@ -9,25 +9,21 @@ task releaseProcessingLib {
         clean
         build
         javadoc
-        if (project.hasProperty("disable-fatjar")) {
-            jar
-        } else {
-            fatJar
-        }
+        jar
     }
 
     finalizedBy 'packageRelease', 'renameRelease'
 
     doFirst {
-        println "releasing library $outputName..."
+        println "releasing library $projectName..."
 
         // printing current jvm
         def currentJvm = org.gradle.internal.jvm.Jvm.current()
         println currentJvm
 
-        if (project.hasProperty("cuda")) {
-            println "CUDA support enabled!"
-        }
+        // if (project.hasProperty("cuda")) {
+        //     println "CUDA support enabled!"
+        // }
 
         println("cleaning release...")
         project.delete(files(
@@ -40,32 +36,31 @@ task releaseProcessingLib {
     doLast {
         println "creating package..."
 
-        if (project.hasProperty("disable-fatjar")) {
-            println "copy library..."
-            project.copy {
-                from "$buildDir/libs/${outputName}.jar"
-                into "$releaseDirectory/library"
-            }
-
-            println "copy dependencies..."
-            project.copy {
-                from configurations.runtimeClasspath
-                into "$releaseDirectory/library"
-            }
-
-            // Need to delete the Processing jar explicilty, at least when including them as fileTree dependencies
-            delete "$releaseDirectory/library/core.jar"
-            delete "$releaseDirectory/library/jogl-all-main.jar"
-            delete "$releaseDirectory/library/gluegen-rt-main.jar"            
-        } else {
-            println "copy fatjar library..."
-            project.copy {
-                from "$buildDir/libs/$outputName-complete.jar"
-                into "$releaseDirectory/library"
-                rename "$outputName-complete.jar", "${outputName}.jar"
-            }
+        println "copy library..."
+        project.copy {
+            from "$buildDir/libs/${projectName}.jar"
+            into "$releaseDirectory/library"
         }
 
+        println "copy dependencies..."
+        project.copy {
+            from configurations.runtimeClasspath
+            into "$releaseDirectory/library"
+        }
+
+        // Need to delete the Processing jar explicitly, at least when including them as fileTree dependencies
+        delete "$releaseDirectory/library/core.jar"
+        delete "$releaseDirectory/library/jogl-all-main.jar"
+        delete "$releaseDirectory/library/gluegen-rt-main.jar"            
+
+        println "copy libraries..."
+        project.copy {
+            from("$releaseDirectory/library") {
+                include "*.jar"
+            }
+            into "libs"
+            exclude "${projectName}.jar"
+        }
 
         println "copy assets (only if necessary)..."
         project.copy {
@@ -87,7 +82,6 @@ task releaseProcessingLib {
         project.copy {
             from("$rootDir") {
                 include "README.md",
-                        "library.properties",
                         "readme/**",
                         "examples/**",
                         "src/**"
@@ -97,10 +91,44 @@ task releaseProcessingLib {
         }
 
         println "copy repository library.txt..."
+        copyProperties("$releaseRoot", "${projectName}.txt")
+
+        println "copy repository library.properties..."
+        copyProperties("$releaseDirectory", "library.properties")
+
+        if (project.hasProperty("sketchbookLocation")) {
+            println "copy to sketchbook..."
+            def sketchbookAbsolutePath = sketchbookLocation.replace("\${user.home}", System.properties['user.home'])
+            def installDirectory = "$sketchbookAbsolutePath/libraries/$projectName"
+            project.copy {
+                from("$releaseDirectory") {
+                    include "library.properties",
+                            "examples/**",
+                            "library/**",
+                            "reference/**",
+                            "src/**"
+                }
+                into "$installDirectory"
+            }
+        }
+    }
+
+    ext.copyProperties = { destDirectory, destFilename ->
         project.copy {
             from "$rootDir/library.properties"
-            into "$releaseRoot"
-            rename "library.properties", "${outputName}.txt"
+            into "$destDirectory"
+            rename "library.properties", "$destFilename"
+
+            filter { String line -> line.replaceAll("name=", "name=$propertiesName") }
+            filter { String line -> line.replaceAll("category=", "category=$propertiesCategory") }
+            filter { String line -> line.replaceAll("authors=", "authors=$propertiesAuthors") }
+            filter { String line -> line.replaceAll("url=", "url=$propertiesUrl") }
+            filter { String line -> line.replaceAll("sentence=", "sentence=$propertiesSentence") }
+            filter { String line -> line.replaceAll("paragraph=", "paragraph=$propertiesParagraph") }
+            filter { String line -> line.replaceAll("version=", "version=$propertiesVersion") }
+            filter { String line -> line.replaceAll("prettyVersion=", "prettyVersion=$propertiesPrettyVersion") }
+            filter { String line -> line.replaceAll("minRevision=", "minRevision=$propertiesMinRevision") }
+            filter { String line -> line.replaceAll("maxRevision=", "maxRevision=$propertiesMaxRevision") }
         }
     }
 }
@@ -108,9 +136,9 @@ task releaseProcessingLib {
 task packageRelease(type: Zip) {
     mustRunAfter releaseProcessingLib
 
-    archiveFileName = "${outputName}${outputNamePostfix}.zip"
+    archiveFileName = "${projectName}.zip"
     from "$releaseDirectory"
-    into "$outputName"
+    into "$projectName"
     destinationDirectory = file("$releaseRoot")
     exclude "**/*.DS_Store"
 }

@@ -8,13 +8,8 @@ frames
 release
 networks
 maps
-data/florian.jpg
-examples/FaceDetectorSpeedTest/data/shibuya-long.mp4
-data/happy.png
 target
-data/family.jpg
-data/runner.jpg
-data/runner2.jpg
+libs
 *.dmp
 *.txt
 *.trc
