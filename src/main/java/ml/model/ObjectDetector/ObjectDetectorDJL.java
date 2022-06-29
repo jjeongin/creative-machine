@@ -1,8 +1,8 @@
 // Use this package name when debugging from IntelliJ
-// package main.java.ml.model.ObjectDetector;
+ package main.java.ml.model.ObjectDetector;
 
 // Use this package name when building with gradle to release the library
-package ml;
+//package ml;
 
 import ai.djl.*;
 import ai.djl.engine.Engine;
@@ -10,6 +10,8 @@ import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
 import ai.djl.modality.cv.output.DetectedObjects;
+import ai.djl.modality.cv.output.BoundingBox;
+import ai.djl.modality.cv.output.Rectangle;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
@@ -27,6 +29,7 @@ import java.nio.file.Paths;
 
 import processing.core.PApplet;
 import processing.core.PImage;
+import processing.core.PVector;
 
 import static processing.core.PConstants.RGB;
 
@@ -49,7 +52,7 @@ public class ObjectDetectorDJL {
      *                         if not in the model zoo, try to load as URL
      */
     public ObjectDetectorDJL(PApplet myParent, String modelNameOrURL) {
-        parent = myParent;
+        this.parent = myParent;
         logger.info("model loading..");
 
 //        String modelUrl =
@@ -67,7 +70,7 @@ public class ObjectDetectorDJL {
             backbone = "resnet50";
         }
 
-        criteria = Criteria.builder()
+        this.criteria = Criteria.builder()
                 .optApplication(Application.CV.OBJECT_DETECTION)
                 .setTypes(Image.class, DetectedObjects.class)
                 .optFilter("backbone", backbone)
@@ -77,12 +80,13 @@ public class ObjectDetectorDJL {
         logger.info("successfully loaded!");
     }
 
+    // HELPER METHODS --------------------------------------------------
     /**
      * Convert PImage to BufferedImage (from Processing source code)
      * @param pImg
      * @return BufferedImage
      */
-    public BufferedImage PImagetoBuffImage(PImage pImg) {
+    private BufferedImage PImagetoBuffImage(PImage pImg) {
         pImg.loadPixels();
         int type = (pImg.format == RGB) ?
                 BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
@@ -93,19 +97,45 @@ public class ObjectDetectorDJL {
         return image;
     }
 
+    private DetectedObjectDJL[] parseDetectedObjects(DetectedObjects detected) {
+        int numObjects = detected.getNumberOfObjects();
+        DetectedObjectDJL[] objectList = new DetectedObjectDJL[numObjects];
+        for (int i = 0; i < numObjects; i++) {
+            // get the ith detected object
+            DetectedObjects.DetectedObject d = detected.item(i);
+            // retrieve information from a detected object
+            String className = d.getClassName(); // get class name
+            float probability = (float) d.getProbability(); // get probability
+            Rectangle bound = d.getBoundingBox().getBounds(); // get bounding box
+//            System.out.println("x and y: " + String.valueOf(bound.getX()) + "  " + String.valueOf(bound.getY())
+//                    + " | w and h: " + String.valueOf(bound.getWidth()) + "  " + String.valueOf(bound.getHeight()));
+            PVector upperLeft = new PVector((float) bound.getX(), (float) bound.getY()); // get upper left corner of the bounding box
+            float width = (float) bound.getWidth(); // get width of the bounding box
+            float height = (float) bound.getHeight(); // get height of the bounding box
+            // add each object to the list as DetectedObjectDJL
+            objectList[i] = new DetectedObjectDJL(className, probability, upperLeft, width, height);
+        }
+        return objectList;
+    }
+
+    // --------------------------------------------------
+
     /**
      * Run object detection on given PImage
      * @param pImg
      * @return DetectedObjects
      */
-    public String detect(PImage pImg) {
+    public DetectedObjectDJL[] detect(PImage pImg) {
         BufferedImage buffImg = PImagetoBuffImage(pImg);
         Image img = ImageFactory.getInstance().fromImage(buffImg);
 
         try (ZooModel<Image, DetectedObjects> model = criteria.loadModel()) {
             try (Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
+                // detect objects
                 DetectedObjects detected = predictor.predict(img);
-                return detected.toString();
+                // parse DetectedObjects to a list of DetectedObjectDJL
+                DetectedObjectDJL[] detectedList = parseDetectedObjects(detected);
+                return detectedList;
             } catch (TranslateException e) {
                 throw new RuntimeException(e);
             }
@@ -118,17 +148,21 @@ public class ObjectDetectorDJL {
         }
     }
 
-    public String detect(PImage pImg, Boolean saveOutputImg, String fileName) {
+    public DetectedObjectDJL[] detect(PImage pImg, Boolean saveOutputImg, String fileName) {
         BufferedImage buffImg = PImagetoBuffImage(pImg);
         Image img = ImageFactory.getInstance().fromImage(buffImg);
 
         try (ZooModel<Image, DetectedObjects> model = criteria.loadModel()) {
             try (Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
+                // detect objects
                 DetectedObjects detected = predictor.predict(img);
+                // parse DetectedObjects to a list of DetectedObjectDJL
+                DetectedObjectDJL[] detectedList = parseDetectedObjects(detected);
+                // save bounding box image
                 if (saveOutputImg == true) {
                     saveBoundingBoxImage(fileName, img, detected);
                 }
-                return detected.toString();
+                return detectedList;
             } catch (TranslateException e) {
                 throw new RuntimeException(e);
             }
