@@ -1,8 +1,8 @@
 // Use this package name when debugging from IntelliJ
- package main.java.ml.model.ObjectDetector;
+// package main.java.ml.model.ObjectDetector;
 
 // Use this package name when building with gradle to release the library
-//package ml;
+package ml;
 
 import ai.djl.*;
 import ai.djl.engine.Engine;
