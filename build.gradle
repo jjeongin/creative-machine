@@ -57,6 +57,10 @@ dependencies {
     implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: "$djlTensorflowNativeVersion", classifier: 'linux-x86_64'
     implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: "$djlTensorflowNativeVersion", classifier: 'win-x86_64'
 
+    // DJL MXNet engine
+    implementation group: 'ai.djl.mxnet', name: 'mxnet-engine', version: "$djlVersion"
+    implementation group: 'ai.djl.mxnet', name: 'mxnet-model-zoo', version: "$djlVersion"
+
     // GPU support
     implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cu113', version: "$djlTensorflowNativeVersion", classifier: 'linux-x86_64'
     implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cu113', version: "$djlTensorflowNativeVersion", classifier: 'win-x86_64'    
