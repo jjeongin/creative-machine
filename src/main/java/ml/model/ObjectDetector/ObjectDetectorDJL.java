@@ -68,8 +68,8 @@ public class ObjectDetectorDJL {
 //        backbone = "resnet50";
 
         // Select the model to use
-        // from TensorFlow engine
-        // ssd {"backbone":"mobilenet_v2","dataset":"openimages_v4"}
+        // SSD from TensorFlow engine
+        // Available models : ssd {"backbone":"mobilenet_v2","dataset":"openimages_v4"}
         if (modelNameOrURL.equals("openimages_ssd")) {
             this.criteria = Criteria.builder()
                     .optApplication(Application.CV.OBJECT_DETECTION)
@@ -78,7 +78,8 @@ public class ObjectDetectorDJL {
                     .optEngine("TensorFlow")
                     .build();
         }
-        // from MXNet engine
+        // SSD from MXNet engine
+        // Available models :
         // ssd_512_resnet50_v1_voc {"size":"512","backbone":"resnet50","flavor":"v1","dataset":"voc"}
         // ssd_512_vgg16_atrous_coco {"size":"512","backbone":"vgg16","flavor":"atrous","dataset":"coco"}
         // ssd_512_mobilenet1.0_voc {"size":"512","backbone":"mobilenet1.0","dataset":"voc"}
@@ -92,7 +93,8 @@ public class ObjectDetectorDJL {
                     .optEngine("MXNet")
                     .build();
         }
-        // from MXNet engine
+        // Yolo from MXNet engine
+        // Available models :
         // dataset: "voc", "coco"
         // backbone: "darknet53", "mobilenet1.0"
         else if (modelNameOrURL.equals("yolo")) {
