@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 import processing.core.PApplet;
 import processing.core.PImage;
@@ -58,24 +59,51 @@ public class ObjectDetectorDJL {
 //        String modelUrl =
 //                "http://download.tensorflow.org/models/object_detection/tf2/20200711/ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8.tar.gz";
 
-//        String backbone = "mobilenet_v2"; // default
-//        if (modelNameOrURL.equals("mobilenet_v2")) {
-//            backbone =  modelNameOrURL;
+//        String backbone;
+//        if ("TensorFlow".equals(Engine.getDefaultEngineName())) {
+//            backbone = "mobilenet_v2";
+//        } else {
+//            backbone = "resnet50";
 //        }
+//        backbone = "resnet50";
 
-        String backbone;
-        if ("TensorFlow".equals(Engine.getDefaultEngineName())) {
-            backbone = "mobilenet_v2";
-        } else {
-            backbone = "resnet50";
+        // Select the model to use
+        // from TensorFlow engine
+        // ssd {"backbone":"mobilenet_v2","dataset":"openimages_v4"}
+        if (modelNameOrURL.equals("openimages_ssd")) {
+            this.criteria = Criteria.builder()
+                    .optApplication(Application.CV.OBJECT_DETECTION)
+                    .setTypes(Image.class, DetectedObjects.class)
+                    .optFilter("backbone", "mobilenet_v2")
+                    .optEngine("TensorFlow")
+                    .build();
         }
-
-        this.criteria = Criteria.builder()
-                .optApplication(Application.CV.OBJECT_DETECTION)
-                .setTypes(Image.class, DetectedObjects.class)
-                .optFilter("backbone", backbone)
-                .optEngine(Engine.getDefaultEngineName())
-                .build();
+        // from MXNet engine
+        // ssd_512_resnet50_v1_voc {"size":"512","backbone":"resnet50","flavor":"v1","dataset":"voc"}
+        // ssd_512_vgg16_atrous_coco {"size":"512","backbone":"vgg16","flavor":"atrous","dataset":"coco"}
+        // ssd_512_mobilenet1.0_voc {"size":"512","backbone":"mobilenet1.0","dataset":"voc"}
+        // ssd_300_vgg16_atrous_voc {"size":"300","backbone":"vgg16","flavor":"atrous","dataset":"voc"}
+        else if (modelNameOrURL.equals("cocossd")) {
+            this.criteria = Criteria.builder()
+                    .optApplication(Application.CV.OBJECT_DETECTION)
+                    .setTypes(Image.class, DetectedObjects.class)
+                    .optFilter("backbone", "vgg16") // vgg has same accuracy as mobilenet while it is 32 times bigger than mobilenet
+                    .optFilter("dataset", "coco")
+                    .optEngine("MXNet")
+                    .build();
+        }
+        // from MXNet engine
+        // dataset: "voc", "coco"
+        // backbone: "darknet53", "mobilenet1.0"
+        else if (modelNameOrURL.equals("yolo")) {
+            this.criteria = Criteria.builder()
+                    .optApplication(Application.CV.OBJECT_DETECTION)
+                    .setTypes(Image.class, DetectedObjects.class)
+                    .optFilter("backbone", "darknet53")
+                    .optFilter("dataset", "coco")
+                    .optEngine("MXNet")
+                    .build();
+        }
 
         logger.info("successfully loaded!");
     }
@@ -97,6 +125,11 @@ public class ObjectDetectorDJL {
         return image;
     }
 
+    /**
+     * Parse each object in DetectedObjects into DetectedObjectDJL[]
+     * @param detected
+     * @return DetectedObjectDJL[]
+     */
     private DetectedObjectDJL[] parseDetectedObjects(DetectedObjects detected) {
         int numObjects = detected.getNumberOfObjects();
         DetectedObjectDJL[] objectList = new DetectedObjectDJL[numObjects];

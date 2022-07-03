@@ -14,7 +14,7 @@ public class DetectedObjectDJL {
     public DetectedObjectDJL(String name, float probability, PVector upperLeft, float width, float height) {
         this.name = name;
         this.probability = probability;
-        this.upperLeft = upperLeft;
+        this.upperLeft = upperLeft; // value scaled from 0 to 1
         this.width = width;
         this.height = height;
     }
