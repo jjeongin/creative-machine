@@ -1,8 +1,4 @@
-// Use this package name when debugging from IntelliJ
-// package main.java.ml.model;
-
-// Use this package name when building with gradle to release the library
-package ml;
+package ml.model;
 
 import processing.core.*;
 // import org.tensorflow.*;
