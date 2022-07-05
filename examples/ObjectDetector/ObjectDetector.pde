@@ -1,9 +1,10 @@
-import ml.model.ObjectDetector.*;
+import main.java.ml.model.ObjectDetector.*;
+import main.java.ml.result.*;
 
 ObjectDetectorDJL detectorDJL;
 String outputName;
 PImage orgImg;
-DetectedObjectDJL[] detectedList;
+MLObject[] results;
 
 void setup() {
     size(768, 576);
@@ -16,11 +17,11 @@ void setup() {
 
     // run object detection and save output image
     outputName = imgName + "_output_" + modelName + ".png";
-    detectedList = detectorDJL.detect(orgImg, true, outputName);
+    results = detectorDJL.detect(orgImg, true, outputName);
 
     // print each detected object and its probability
-    for (int i = 0; i < detectedList.length; i++) {
-        println(detectedList[i].getName() + " detected! (probability: " + detectedList[i].getProbability() + ")");
+    for (int i = 0; i < results.length; i++) {
+        println(results[i].getLabel() + " detected! (probability: " + results[i].getConfidence() + ")");
     }
 }
 
@@ -29,8 +30,8 @@ void draw() {
    image(orgImg, 0, 0);
    noFill();
    stroke(255, 0, 0);
-   for (int i = 0; i < detectedList.length; i++) {
-       DetectedObjectDJL obj = detectedList[i];
+   for (int i = 0; i < results.length; i++) {
+       MLObject obj = results[i];
        // multiply by image width & height to draw each bounding box on right position
        rect(obj.getUpperLeft().x * orgImg.width, obj.getUpperLeft().y * orgImg.height,
                obj.getWidth() * orgImg.width, obj.getHeight() * orgImg.height);

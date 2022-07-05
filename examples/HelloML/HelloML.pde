@@ -1,4 +1,4 @@
-import ml.model.*;
+import main.java.ml.model.*;
 
 MLTest ml;
 
