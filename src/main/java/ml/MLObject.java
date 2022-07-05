@@ -1,4 +1,4 @@
-package main.java.ml.result;
+package ml;
 
 import processing.core.PVector;
 

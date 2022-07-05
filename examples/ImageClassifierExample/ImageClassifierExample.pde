@@ -1,5 +1,4 @@
-import main.java.ml.model.ImageClassifier.*;
-import main.java.ml.result.*;
+import ml.*;
 
 ImageClassifier classifier;
 PImage img;
@@ -13,7 +12,7 @@ void setup() {
     classifier = new ImageClassifier(this, modelName);
 
     // load image
-    img = loadImage( "data/kitten.jpg");
+    img = loadImage( "data/bird.jpeg");
 
     // classify
     results = classifier.classify(img);

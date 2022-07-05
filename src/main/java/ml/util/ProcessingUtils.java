@@ -1,4 +1,4 @@
-package main.java.ml.util;
+package ml.util;
 
 import processing.core.PImage;
 

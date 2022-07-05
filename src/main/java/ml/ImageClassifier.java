@@ -1,4 +1,4 @@
-package main.java.ml.model.ImageClassifier;
+package ml;
 
 import ai.djl.Application;
 import ai.djl.MalformedModelException;
@@ -10,9 +10,7 @@ import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
 import ai.djl.translate.TranslateException;
-import main.java.ml.model.ObjectDetector.ObjectDetectorDJL;
-import main.java.ml.result.MLObject;
-import main.java.ml.util.ProcessingUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import processing.core.PApplet;
@@ -22,12 +20,15 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.List;
 
+import ml.util.ProcessingUtils;
+import ml.*;
+
 public class ImageClassifier {
     PApplet parent; // reference to the parent sketch
     private Criteria<Image, Classifications> criteria; // model
 
     private static final Logger logger =
-            LoggerFactory.getLogger(ObjectDetectorDJL.class);
+            LoggerFactory.getLogger(ImageClassifier.class);
 
     public ImageClassifier(PApplet myParent, String modelNameOrURL) {
         this.parent = myParent;
@@ -74,7 +75,7 @@ public class ImageClassifier {
         BufferedImage buffImg = ProcessingUtils.PImagetoBuffImage(pImg);
         Image img = ImageFactory.getInstance().fromImage(buffImg);
 
-        try (ZooModel<Image, Classifications> model = criteria.loadModel()) {
+        try (ZooModel<Image, Classifications> model = this.criteria.loadModel()) {
             try (Predictor<Image, Classifications> predictor = model.newPredictor()) {
                 // classify objects
                 Classifications classified = predictor.predict(img);

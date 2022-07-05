@@ -1,5 +1,4 @@
-import main.java.ml.model.ObjectDetector.*;
-import main.java.ml.result.*;
+import ml.*;
 
 ObjectDetectorDJL detectorDJL;
 String outputName;

@@ -1,5 +1,5 @@
 // Use this package name when debugging from IntelliJ
-package main.java.ml.model.ObjectDetector;
+package ml;
 
 import ai.djl.*;
 import ai.djl.inference.Predictor;
@@ -12,7 +12,6 @@ import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
 import ai.djl.translate.TranslateException;
 
-import main.java.ml.result.MLObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +25,8 @@ import processing.core.PApplet;
 import processing.core.PImage;
 import processing.core.PVector;
 
-import main.java.ml.util.ProcessingUtils;
+import ml.util.ProcessingUtils;
+import ml.*;
 
 /**
  * Object Detector using Deep Java Library
@@ -139,7 +139,7 @@ public class ObjectDetectorDJL {
         BufferedImage buffImg = ProcessingUtils.PImagetoBuffImage(pImg);
         Image img = ImageFactory.getInstance().fromImage(buffImg);
 
-        try (ZooModel<Image, DetectedObjects> model = criteria.loadModel()) {
+        try (ZooModel<Image, DetectedObjects> model = this.criteria.loadModel()) {
             try (Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
                 // detect objects
                 DetectedObjects detected = predictor.predict(img);

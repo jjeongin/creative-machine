@@ -1,4 +1,4 @@
-package main.java.ml.model;
+package ml;
 
 import processing.core.*;
 // import org.tensorflow.*;
