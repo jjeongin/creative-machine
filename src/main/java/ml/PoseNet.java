@@ -90,15 +90,11 @@ public class PoseNet {
         Rectangle personRect = predictPersonInImage(img);
 
         // convert cropped rectangle to image
-        // keypoint.position.x = x * personRect.getWidth() * width + personRect.getX() * width
-
         float personTopLeftX = (float) personRect.getX() * width;
         float personTopLeftY = (float) personRect.getY() * height;
         float personWidth = (float) (personRect.getWidth() * width);
         float personHeight = (float) (personRect.getHeight() * height);
 
-//        System.out.println("person x: " + personTopLeftX + ", y: " + personTopLeftY);
-//        System.out.println("person w: " + personRect.getWidth() * width + ", h: " + personRect.getHeight() * height);
         Image personImg = img.getSubImage(
                         (int) (personTopLeftX),
                         (int) (personTopLeftY),
@@ -162,7 +158,7 @@ public class PoseNet {
         try (ZooModel<Image, Joints> pose = this.criteria.loadModel()) {
             try (Predictor<Image, Joints> predictor = pose.newPredictor()) {
                 Joints joints = predictor.predict(person);
-                saveJointsImage(person, joints);
+//                saveJointsImage(person, joints);
                 return joints;
             } catch (TranslateException e) {
                 throw new RuntimeException(e);
