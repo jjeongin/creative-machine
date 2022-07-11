@@ -162,8 +162,6 @@ public class PoseNet {
                 return joints;
             } catch (TranslateException e) {
                 throw new RuntimeException(e);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
         } catch (ModelNotFoundException e) {
             throw new RuntimeException(e);
@@ -174,7 +172,7 @@ public class PoseNet {
         }
     }
 
-    private void saveJointsImage(Image img, Joints joints) throws IOException {
+    private void saveJointsImage(Image img, Joints joints) {
         // Default output path is parent sketch directory
         Path outputDir = Paths.get(this.parent.sketchPath());
         try {
