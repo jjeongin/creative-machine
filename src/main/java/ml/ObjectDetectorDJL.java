@@ -193,7 +193,7 @@ public class ObjectDetectorDJL {
      */
     private void saveBoundingBoxImage(String fileName, Image img, DetectedObjects detected) {
         // Default output path is parent sketch directory
-        Path outputDir = Paths.get(parent.sketchPath());
+        Path outputDir = Paths.get(this.parent.sketchPath());
         try {
             Files.createDirectories(outputDir);
         } catch (IOException e) {

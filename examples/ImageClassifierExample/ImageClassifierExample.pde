@@ -7,12 +7,13 @@ MLObject[] results;
 void setup() {
     size(400, 450);
     background(255);
+
     // load model
     String modelName = "Darknet"; // "MobileNet", "Darknet"
     classifier = new ImageClassifier(this, modelName);
 
     // load image
-    img = loadImage( "data/bird.jpeg");
+    img = loadImage("data/bird.jpeg");
 
     // classify
     results = classifier.classify(img);

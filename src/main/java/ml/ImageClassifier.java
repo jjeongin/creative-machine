@@ -60,12 +60,12 @@ public class ImageClassifier {
         int numObjects = topKClassifications.size(); // default K is 5
         MLObject[] objectList = new MLObject[numObjects];
         for (int i = 0; i < numObjects; i++) {
-            // retrieve information from a detected object
+            // retrieve information from a classified object
             String labelName = topKClassifications.get(i).getClassName(); // get class name
             String labelId = labelName.split(" ")[0]; // remove label id from label name
             labelName = labelName.replace(labelId + " ", "");
             float confidence = (float) topKClassifications.get(i).getProbability(); // get probability
-            // add each object to the list as DetectedObjectDJL
+            // add each object to the list as MLObject
             objectList[i] = new MLObject(labelName, confidence);
         }
         return objectList;
