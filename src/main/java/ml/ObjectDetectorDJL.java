@@ -12,11 +12,15 @@ import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
 import ai.djl.translate.TranslateException;
 
+import ml.translator.ObjectDetectorTranslator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,6 +30,7 @@ import processing.core.PImage;
 import processing.core.PVector;
 
 import ml.util.ProcessingUtils;
+import ml.translator.ObjectDetectorTranslator;
 import ml.*;
 
 /**
@@ -98,6 +103,31 @@ public class ObjectDetectorDJL {
                     .optFilter("backbone", "darknet53")
                     .optFilter("dataset", "coco")
                     .optEngine("MXNet")
+                    .build();
+        }
+        // if modelNameOrURL is URL
+        else {
+            // check if URL is valid (source: https://stackoverflow.com/questions/2230676/how-to-check-for-a-valid-url-in-java)
+            URL url = null; // check for the URL protocol
+            try {
+                url = new URL(modelNameOrURL);
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
+            try {
+                url.toURI(); // extra check if the URI is valid
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
+
+            this.criteria = Criteria.builder()
+                    .optApplication(Application.CV.OBJECT_DETECTION)
+                    .setTypes(Image.class, DetectedObjects.class)
+                    .optModelUrls(String.valueOf(url))
+                    // saved_model.pb file is in the subfolder of the model archive file
+                    .optModelName("ssd_mobilenet_v2_320x320_coco17_tpu-8/saved_model/") // how to get general model name?
+                    .optTranslator(new ObjectDetectorTranslator())
+                    .optEngine("TensorFlow")
                     .build();
         }
 
