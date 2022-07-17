@@ -19,15 +19,6 @@ import java.util.List;
 public class SentimentTranslator implements Translator<String, Classifications> {
     private Vocabulary vocabulary;
     private BertTokenizer tokenizer;
-//    private Sigmoid(outputs) {
-//        return 1.0 / (1.0 + np.exp(-_outputs))
-//    }
-
-//
-//    def softmax(_outputs):
-//    maxes = np.max(_outputs, axis=-1, keepdims=True)
-//    shifted_exp = np.exp(_outputs - maxes)
-//            return shifted_exp / shifted_exp.sum(axis=-1, keepdims=True)
 
     @Override
     public void prepare(TranslatorContext ctx) throws IOException {
@@ -47,7 +38,7 @@ public class SentimentTranslator implements Translator<String, Classifications> 
 
         NDArray sigmoid = raw.neg().exp().add(1.0).pow(-1); // sigmoid
         System.out.println("sigmoid");
-        System.out.println(new Classifications(Arrays.asList("Negative", "Positive"), sigmoid));
+        System.out.println(new Classifications(Arrays.asList("score"), sigmoid));
 
         NDArray computed = raw.exp().div(raw.exp().sum(new int[] {0}, true)); // softmax
         System.out.println("softmax");
