@@ -16,8 +16,10 @@ import org.slf4j.LoggerFactory;
 import processing.core.PApplet;
 
 import java.io.IOException;
+import java.util.List;
 
 import ml.translator.SentimentTranslator;
+import ml.MLObject;
 
 public class Sentiment {
     PApplet parent; // reference to the parent sketch
@@ -48,10 +50,27 @@ public class Sentiment {
         logger.info("successfully loaded!");
     }
 
-    public Classifications predict(String input) {
+    private MLObject[] parseClassifications(Classifications classified) {
+        List<Classifications.Classification> classifications = classified.items();
+        MLObject[] objectList = new MLObject[2]; // [Negative, Positive]
+        for (int i = 0; i < 2; i++) {
+            // retrieve information from a classified object
+            String labelName = classifications.get(i).getClassName(); // get class name
+            float confidence = (float) classifications.get(i).getProbability(); // get probability
+            // add each object to the list as MLObject
+            objectList[i] = new MLObject(labelName, confidence);
+        }
+        return objectList;
+    }
+
+    public MLObject[] predict(String input) {
         try (ZooModel<String, Classifications> model = this.criteria.loadModel()) {
             Predictor<String, Classifications> predictor = model.newPredictor();
-            return predictor.predict(input);
+            // run sentiment analysis
+            Classifications classified = predictor.predict(input);
+            // parse Classifications to a list of MLObject
+            MLObject[] results = parseClassifications(classified);
+            return results;
         } catch (ModelNotFoundException e) {
             throw new RuntimeException(e);
         } catch (MalformedModelException e) {
