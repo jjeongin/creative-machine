@@ -30,6 +30,7 @@ void draw() {
 
     // print sentiment with higher score
     fill(121, 129, 132); // grey
+    // if negative score is bigger than positive score
     if (prediction[0].getConfidence() > prediction[1].getConfidence()) {
         text("Sentiment is Negative ; (", 40, 200);
     }
