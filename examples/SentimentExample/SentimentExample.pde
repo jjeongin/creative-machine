@@ -5,7 +5,7 @@ MLObject[] prediction;
 
 void setup() {
     size(450, 250);
-    background(255);
+    background(255, 254, 243);
     PFont font = createFont("Arial", 20);
     textFont(font);
 
@@ -21,18 +21,18 @@ void setup() {
 
 void draw() {
     // print Negative score
-    fill(23, 144, 209); // blue
+    fill(15, 89, 99); // dark green
     text(prediction[0].getLabel() + " Score: " + prediction[0].getConfidence(), 40, 70);
 
     // print Positive score
-    fill(255, 153, 235); // pink
+    fill(255, 115, 59); // orange
     text(prediction[1].getLabel() + " Score: " + prediction[1].getConfidence(), 40, 130);
 
     fill(0);
     if (prediction[0].getConfidence() > prediction[1].getConfidence()) {
-        text("Sentiment is Negative : (", 40, 200);
+        text("Sentiment is Negative ; (", 40, 200);
     }
     else {
-        text("Sentiment is Positive : )", 40, 200);
+        text("Sentiment is Positive : >", 40, 200);
     }
 }
