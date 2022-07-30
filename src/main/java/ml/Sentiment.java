@@ -9,6 +9,7 @@ import ai.djl.ndarray.types.Shape;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
+import ai.djl.training.util.DownloadUtils;
 import ai.djl.translate.TranslateException;
 import ai.djl.util.PairList;
 import org.slf4j.Logger;
@@ -16,6 +17,8 @@ import org.slf4j.LoggerFactory;
 import processing.core.PApplet;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import ml.translator.SentimentTranslator;
@@ -29,18 +32,25 @@ public class Sentiment {
     private static final Logger logger =
             LoggerFactory.getLogger(Sentiment.class);
 
-    public Sentiment(PApplet myParent) {
+    public Sentiment(PApplet myParent, String modelNameorURL) {
         this.parent = myParent;
         logger.info("model loading..");
 
         // load distilbert model finetuned on SST2
-        String modelURL = "file:///Users/jlee/src/ml4processing/models/distilbert-sst2/saved_model/";
+        String sketchPath = myParent.sketchPath();
+        String modelPath = sketchPath + "/" + modelNameorURL;
+        logger.info("model found at: " + modelPath);
+
+        // another method?
+//        Path modelPath = Paths.get(modelNameorURL);
+//        Path absolutePath = modelPath.toAbsolutePath();
+//        System.out.println(absolutePath);
 
         this.criteria =
                 Criteria.builder()
                         .optApplication(Application.NLP.SENTIMENT_ANALYSIS)
                         .setTypes(String.class, Classifications.class)
-                        .optModelUrls(modelURL)
+                        .optModelUrls(modelPath)
                         .optTranslator(new SentimentTranslator())
                         .optEngine("TensorFlow")
                         // This model was traced on CPU and can only run on CPU

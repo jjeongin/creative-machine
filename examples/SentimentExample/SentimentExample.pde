@@ -5,12 +5,12 @@ MLObject[] prediction;
 
 void setup() {
     size(450, 250);
-    background(0);
+    background(255);
     PFont font = createFont("Arial", 20);
     textFont(font);
 
     // load model
-    sentiment = new Sentiment(this);
+    sentiment = new Sentiment(this, "distilbert-sst2/saved_model/");
 
     // define input
     String input = "Machine Learning is fun.";
