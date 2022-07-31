@@ -53,8 +53,8 @@ public class Sentiment {
                         .optModelUrls(modelPath)
                         .optTranslator(new SentimentTranslator())
                         .optEngine("TensorFlow")
-                        // This model was traced on CPU and can only run on CPU
-                        .optDevice(Device.cpu())
+//                        // This model was traced on CPU and can only run on CPU
+//                        .optDevice(Device.cpu())
                         .build();
 
         logger.info("successfully loaded!");
