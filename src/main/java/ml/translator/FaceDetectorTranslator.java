@@ -14,11 +14,7 @@
 package ml.translator;
 
 import ai.djl.modality.cv.Image;
-import ai.djl.modality.cv.output.BoundingBox;
-import ai.djl.modality.cv.output.DetectedObjects;
-import ai.djl.modality.cv.output.Landmark;
-import ai.djl.modality.cv.output.Point;
-import ai.djl.modality.cv.output.Rectangle;
+import ai.djl.modality.cv.output.*;
 import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDArrays;
 import ai.djl.ndarray.NDList;
@@ -33,6 +29,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static ai.djl.modality.cv.util.NDImageUtils.resize;
+
+// translator for ArcFace MXNet model (https://github.com/deepinsight/insightface/tree/master/recognition/arcface_mxnet)
 public class FaceDetectorTranslator implements Translator<Image, DetectedObjects> {
 
     private double confThresh;
@@ -43,6 +42,8 @@ public class FaceDetectorTranslator implements Translator<Image, DetectedObjects
     private int[] steps;
     private int width;
     private int height;
+//    private int imgW;
+//    private int imgH;
 
     public FaceDetectorTranslator(
             double confThresh,
@@ -61,10 +62,16 @@ public class FaceDetectorTranslator implements Translator<Image, DetectedObjects
 
     @Override
     public NDList processInput(TranslatorContext ctx, Image input) {
+        NDArray array = input.toNDArray(ctx.getNDManager(), Image.Flag.COLOR);
+//        array = resize(array, 640, 640); // default input size of the model
+//        width = 640;
+//        height = 640;
         width = input.getWidth();
         height = input.getHeight();
-        NDArray array = input.toNDArray(ctx.getNDManager(), Image.Flag.COLOR);
-        array = array.transpose(2, 0, 1).flip(0); // HWC -> CHW RGB -> BGR
+
+//        array = array.flip(0); // RGB -> BGR
+        array = array.transpose(2, 0, 1).flip(0); // H, W, C -> C, H, W
+
         // The network by default takes float32
         if (!array.getDataType().equals(DataType.FLOAT32)) {
             array = array.toType(DataType.FLOAT32, false);
@@ -77,25 +84,20 @@ public class FaceDetectorTranslator implements Translator<Image, DetectedObjects
 
     @Override
     public DetectedObjects processOutput(TranslatorContext ctx, NDList list) {
-        // NDList list : 9 arrays (3 different strides, each stride outputs its scores, bboxes, landmarks)
+//      NDList list has 9 elements (3 different strides, each stride outputs its scores, bboxes, landmarks)
         NDManager manager = ctx.getNDManager();
         double scaleXY = variance[0];
         double scaleWH = variance[1];
 
-//        NDArray probl = list.get(1); // get 2nd array (8, 29, 50)
-//        System.out.println(probl);
-        NDArray prob = list.get(1).get(":, 1:"); // (2, 8, 50) ??
-        prob =
+        NDArray prob = list.get(1).get(":, 1:"); // shape: (16800, 1)
+        prob =                                          // shape: (2, 16800)
                 NDArrays.stack(
                         new NDList(
-                                prob.argMax(1).toType(DataType.FLOAT32, false),
-                                prob.max(new int[] {1})));
+                                prob.argMax(1).toType(DataType.FLOAT32, false), // index
+                                prob.max(new int[] {1})));                            // value
 
         NDArray boxRecover = boxRecover(manager, width, height, scales, steps);
-        NDArray boundingBoxes = list.get(0); // get 1st array (4, 29, 50)
-        System.out.println(boundingBoxes);
-        NDArray test2 = boundingBoxes.get(":, 2:").mul(scaleWH).exp(); // (4, 27, 50) ??
-        System.out.println(test2);
+        NDArray boundingBoxes = list.get(2);
         NDArray bbWH = boundingBoxes.get(":, 2:").mul(scaleWH).exp().mul(boxRecover.get(":, 2:"));
         NDArray bbXY =
                 boundingBoxes
@@ -107,14 +109,21 @@ public class FaceDetectorTranslator implements Translator<Image, DetectedObjects
 
         boundingBoxes = NDArrays.concat(new NDList(bbXY, bbWH), 1);
 
-        NDArray landms = list.get(2);
+        NDArray landms = list.get(0);
         landms = decodeLandm(landms, boxRecover, scaleXY);
 
+        System.out.println(prob + " " + boundingBoxes + " " + landms);
+
         // filter the result below the threshold
+        NDArray prob1 = prob.get(1);
+        System.out.println(prob.get(1));
         NDArray cutOff = prob.get(1).gt(confThresh);
+        System.out.println(cutOff);
         boundingBoxes = boundingBoxes.transpose().booleanMask(cutOff, 1).transpose();
         landms = landms.transpose().booleanMask(cutOff, 1).transpose();
         prob = prob.booleanMask(cutOff, 1);
+
+        System.out.println(prob + " " + boundingBoxes + " " + landms);
 
         // start categorical filtering
         long[] order = prob.get(1).argSort().get(":" + topK).toLongArray();
@@ -131,8 +140,8 @@ public class FaceDetectorTranslator implements Translator<Image, DetectedObjects
             int classId = (int) classProb[0];
             double probability = classProb[1];
 
-            double[] boxArr = boundingBoxes.get(currMaxLoc).toDoubleArray();
-            double[] landmsArr = landms.get(currMaxLoc).toDoubleArray();
+            float[] boxArr = boundingBoxes.get(currMaxLoc).toFloatArray();
+            float[] landmsArr = landms.get(currMaxLoc).toFloatArray();
             Rectangle rect = new Rectangle(boxArr[0], boxArr[1], boxArr[2], boxArr[3]);
             List<BoundingBox> boxes = recorder.getOrDefault(classId, new ArrayList<>());
             boolean belowIoU = true;
@@ -145,8 +154,8 @@ public class FaceDetectorTranslator implements Translator<Image, DetectedObjects
             if (belowIoU) {
                 List<Point> keyPoints = new ArrayList<>();
                 for (int j = 0; j < 5; j++) { // 5 face landmarks
-                    double x = landmsArr[j * 2];
-                    double y = landmsArr[j * 2 + 1];
+                    float x = landmsArr[j * 2];
+                    float y = landmsArr[j * 2 + 1];
                     keyPoints.add(new Point(x * width, y * height));
                 }
                 Landmark landmark =
@@ -162,46 +171,40 @@ public class FaceDetectorTranslator implements Translator<Image, DetectedObjects
         }
 
         return new DetectedObjects(retNames, retProbs, retBB);
-
-//        List<String> classNames = new ArrayList<>();
-//        List<Double> probs = new ArrayList<>();
-//        List<BoundingBox> boundigBoxes = new ArrayList<>();
-//        DetectedObjects objs = new DetectedObjects(classNames, probs, boundigBoxes);
-//        return objs;
     }
 
     private NDArray boxRecover(
             NDManager manager, int width, int height, int[][] scales, int[] steps) {
-        int[][] aspectRatio = new int[steps.length][2]; // shape : [83225,2] ?
-        for (int i = 0; i < steps.length; i++) {
-            int wRatio = (int) Math.ceil((float) width / steps[i]);
-            int hRatio = (int) Math.ceil((float) height / steps[i]);
-            aspectRatio[i] = new int[] {hRatio, wRatio}; // add aspected ratios for each step
+        int[][] aspectRatio = new int[steps.length][2]; // shape : (3, 2)
+        for (int i = 0; i < steps.length; i++) { // add aspected ratios for each step (=stride)
+            int wRatio = (int) Math.ceil( (float) width / steps[i]);
+            int hRatio = (int) Math.ceil( (float) height / steps[i]);
+            aspectRatio[i] = new int[] {hRatio, wRatio};
         }
 
-        List<double[]> defaultBoxes = new ArrayList<>();
-
+        // Changed double -> float list for defaultBoxes
+        // since using double causes a type-mismatch error when TFNDArray runs clip(0, 1);
+        List<float[]> defaultBoxes = new ArrayList<>();
         for (int idx = 0; idx < steps.length; idx++) {
-            int[] scale = scales[idx]; // for each scale in scales
+            int[] scale = scales[idx]; // for each scale, {{16, 32}, {64, 128}, {256, 512}}
             for (int h = 0; h < aspectRatio[idx][0]; h++) {
                 for (int w = 0; w < aspectRatio[idx][1]; w++) {
                     for (int i : scale) {
-                        double skx = i * 1.0 / width;
-                        double sky = i * 1.0 / height;
-                        double cx = (w + 0.5) * steps[idx] / width;
-                        double cy = (h + 0.5) * steps[idx] / height;
-                        defaultBoxes.add(new double[] {cx, cy, skx, sky});
+                        float skx = (float) (i * 1.0 / width);
+                        float sky = (float) (i * 1.0 / height);
+                        float cx = (float) ((w + 0.5) * steps[idx] / width);
+                        float cy = (float) ((h + 0.5) * steps[idx] / height);
+                        defaultBoxes.add(new float[] {cx, cy, skx, sky});
                     }
                 }
             }
         }
 
-        System.out.println(defaultBoxes);
-
-        double[][] boxes = new double[defaultBoxes.size()][defaultBoxes.get(0).length];
+        float[][] boxes = new float[defaultBoxes.size()][defaultBoxes.get(0).length];
         for (int i = 0; i < defaultBoxes.size(); i++) {
             boxes[i] = defaultBoxes.get(i);
         }
+        System.out.println(defaultBoxes.size() + " " + defaultBoxes.get(0).length); // (16800, 4)
         return manager.create(boxes).clip(0.0, 1.0); // return boxes in scale from 0 to 1
     }
 
