@@ -5,6 +5,8 @@ import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
 import ai.djl.modality.cv.output.DetectedObjects;
+import ai.djl.modality.cv.output.Point;
+import ai.djl.modality.cv.output.Rectangle;
 import ai.djl.ndarray.types.Shape;
 import ai.djl.repository.zoo.Criteria;
 
@@ -23,9 +25,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
+import ml.MLFace;
 import ml.translator.FaceDetectorTranslator;
+import ml.util.DJLUtils;
 import ml.util.ProcessingUtils;
+import processing.core.PVector;
 
 public class FaceDetector {
     PApplet parent; // reference to the parent sketch
@@ -35,52 +42,73 @@ public class FaceDetector {
     private static final Logger logger =
             LoggerFactory.getLogger(FaceDetector.class);
 
-    public FaceDetector(PApplet myParent, String modelNameOrURL) {
+    public FaceDetector(PApplet myParent) {
         this.parent = myParent;
         logger.info("model loading..");
 
+        // default config
         double confThresh = 0.85f;
-//        double confThresh = 0.5f;
         double nmsThresh = 0.45f;
         double[] variance = {0.1f, 0.2f};
         int topK = 5000;
         int[][] scales = {{16, 32}, {64, 128}, {256, 512}};
         int[] steps = {8, 16, 32}; // strides
-
         FaceDetectorTranslator translator =
                 new FaceDetectorTranslator(confThresh, nmsThresh, variance, topK, scales, steps);
 
+        // To Do : load model from the Internet
+        String modelURL = "file:///Users/jlee/src/ml4processing/models/cv/face/retinaface-resnet50/saved_model/";
         this.criteria = Criteria.builder()
                 .setTypes(Image.class, DetectedObjects.class)
-                .optModelUrls(modelNameOrURL)
-//                .optModelName("R50") // prefix of .params and .json files inside model dir or archive
+                .optModelUrls(modelURL)
                 .optTranslator(translator)
-                .optEngine("TensorFlow") // Use MXNet engine
+                .optEngine("TensorFlow") // Use TensorFlow engine
                 .build();
 
         logger.info("successfully loaded!");
     }
 
-    public DetectedObjects detect(PImage pImg) {
+    private MLFace[] parseDetectedObjects(DetectedObjects detected) {
+        int numObjects = detected.getNumberOfObjects();
+        MLFace[] faces = new MLFace[numObjects];
+        for (int i = 0; i < numObjects; i++) {
+            // get the ith detected object
+            DetectedObjects.DetectedObject d = detected.item(i);
+            // retrieve information from a detected object
+            String className = d.getClassName(); // get class name
+            float probability = (float) d.getProbability(); // get probability
+            Rectangle bound = d.getBoundingBox().getBounds(); // get bounding box
+            float x = (float) bound.getX();
+            float y = (float) bound.getY();
+//            PVector upperLeft = new PVector((float) bound.getX(), (float) bound.getY()); // get upper left corner of the bounding box
+            float width = (float) bound.getWidth(); // get width of the bounding box
+            float height = (float) bound.getHeight(); // get height of the bounding box
+
+            // convert landmark points
+            List<PVector> landmarks = new ArrayList<>(); // create new landmark list
+            Iterable<Point> landmarkPoints = d.getBoundingBox().getPath(); // get landmark points from Landmark object
+            for (Point p : landmarkPoints) {
+                PVector l = new PVector((float) p.getX(), (float) p.getY());
+                landmarks.add(l); // add each element in the array
+            }
+
+            // add each object to the list as DetectedObjectDJL
+            faces[i] = new MLFace(className, probability, x, y, width, height, landmarks);
+        }
+        return faces;
+    }
+
+    public MLFace[] detect(PImage pImg) {
         BufferedImage buffImg = ProcessingUtils.PImagetoBuffImage(pImg);
         Image img = ImageFactory.getInstance().fromImage(buffImg);
 
         try (ZooModel<Image, DetectedObjects> model = criteria.loadModel()) {
             try (Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
-                PairList<String, Shape> inputInfo = model.describeInput();
-                System.out.println("input info");
-                System.out.println(inputInfo.keys());
-                System.out.println(inputInfo.values());
-
-                PairList<String, Shape> outputInfo = model.describeOutput();
-                System.out.println("output info");
-                System.out.println(outputInfo.keys());
-                System.out.println(outputInfo.values());
-
-                DetectedObjects detection = predictor.predict(img);
-//                DetectedObjects detection = predictor.predict(img);
-                saveBoundingBoxImage(img, detection);
-                return detection;
+                // detect objects
+                DetectedObjects detected = predictor.predict(img);
+                // parse DetectedObjects to a list of MLFace
+                MLFace[] detectedList = parseDetectedObjects(detected);
+                return detectedList;
             } catch (TranslateException e) {
                 throw new RuntimeException(e);
             }
@@ -93,15 +121,30 @@ public class FaceDetector {
         }
     }
 
-    private void saveBoundingBoxImage(Image img, DetectedObjects detection)
-            throws IOException {
-        Path outputDir = Paths.get(this.parent.sketchPath());
-        Files.createDirectories(outputDir);
+    public MLFace[] detect(PImage pImg, Boolean saveOutputImg, String fileName) {
+        BufferedImage buffImg = ProcessingUtils.PImagetoBuffImage(pImg);
+        Image img = ImageFactory.getInstance().fromImage(buffImg);
 
-        img.drawBoundingBoxes(detection);
-
-        Path imagePath = outputDir.resolve("retinaface_detected.png");
-        img.save(Files.newOutputStream(imagePath), "png");
-        logger.info("Face detection result image has been saved in: {}", imagePath);
+        try (ZooModel<Image, DetectedObjects> model = criteria.loadModel()) {
+            try (Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
+                // detect objects
+                DetectedObjects detected = predictor.predict(img);
+                // parse DetectedObjects to a list of MLFace
+                MLFace[] detectedList = parseDetectedObjects(detected);
+                // save bounding box image
+                if (saveOutputImg == true) {
+                    DJLUtils.saveBoundingBoxImage(this.parent, fileName, img, detected);
+                }
+                return detectedList;
+            } catch (TranslateException e) {
+                throw new RuntimeException(e);
+            }
+        } catch (ModelNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (MalformedModelException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -32,11 +32,13 @@ public class Sentiment {
     private static final Logger logger =
             LoggerFactory.getLogger(Sentiment.class);
 
-    public Sentiment(PApplet myParent, String modelNameorURL) {
+    public Sentiment(PApplet myParent) {
         this.parent = myParent;
         logger.info("model loading..");
 
         // load distilbert model finetuned on SST2
+        String modelNameorURL = "distilbert-sst2/saved_model/";
+
         String sketchPath = myParent.sketchPath();
         String modelPath = sketchPath + "/" + modelNameorURL;
         logger.info("model found at: " + modelPath);

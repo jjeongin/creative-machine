@@ -6,13 +6,13 @@ import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
 import ai.djl.modality.cv.output.DetectedObjects;
+import ai.djl.modality.cv.output.Point;
 import ai.djl.modality.cv.output.Rectangle;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
 import ai.djl.translate.TranslateException;
 
-import ml.translator.ObjectDetectorTranslator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,17 +21,16 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.List;
 
 import processing.core.PApplet;
 import processing.core.PImage;
 import processing.core.PVector;
 
-import ml.util.ProcessingUtils;
+import ml.MLObject;
 import ml.translator.ObjectDetectorTranslator;
-import ml.*;
+import ml.util.ProcessingUtils;
+import ml.util.DJLUtils;
 
 /**
  * Object Detector using Deep Java Library
@@ -150,11 +149,13 @@ public class ObjectDetectorDJL {
             String className = d.getClassName(); // get class name
             float probability = (float) d.getProbability(); // get probability
             Rectangle bound = d.getBoundingBox().getBounds(); // get bounding box
-            PVector upperLeft = new PVector((float) bound.getX(), (float) bound.getY()); // get upper left corner of the bounding box
+            float x = (float) bound.getX();
+            float y = (float) bound.getY();
+//            PVector upperLeft = new PVector((float) bound.getX(), (float) bound.getY()); // get upper left corner of the bounding box
             float width = (float) bound.getWidth(); // get width of the bounding box
             float height = (float) bound.getHeight(); // get height of the bounding box
             // add each object to the list as DetectedObjectDJL
-            objectList[i] = new MLObject(className, probability, upperLeft, width, height);
+            objectList[i] = new MLObject(className, probability, x, y, width, height);
         }
         return objectList;
     }
@@ -196,11 +197,11 @@ public class ObjectDetectorDJL {
             try (Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
                 // detect objects
                 DetectedObjects detected = predictor.predict(img);
-                // parse DetectedObjects to a list of Object
+                // parse DetectedObjects to a list of MLObject
                 MLObject[] detectedList = parseDetectedObjects(detected);
                 // save bounding box image
                 if (saveOutputImg == true) {
-                    saveBoundingBoxImage(fileName, img, detected);
+                    DJLUtils.saveBoundingBoxImage(this.parent, fileName, img, detected);
                 }
                 return detectedList;
             } catch (TranslateException e) {
@@ -213,32 +214,5 @@ public class ObjectDetectorDJL {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    /**
-     *
-     * @param fileName
-     * @param img
-     * @param detected
-     */
-    private void saveBoundingBoxImage(String fileName, Image img, DetectedObjects detected) {
-        // Default output path is parent sketch directory
-        Path outputDir = Paths.get(this.parent.sketchPath());
-        try {
-            Files.createDirectories(outputDir);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        img.drawBoundingBoxes(detected);
-
-        Path imagePath = outputDir.resolve(fileName);
-        // OpenJDK can't save jpg with alpha channel
-        try {
-            img.save(Files.newOutputStream(imagePath), "png");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        System.out.println("Detected objects image has been saved in: " + imagePath);
     }
 }
