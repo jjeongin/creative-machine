@@ -34,6 +34,8 @@ import ml.util.DJLUtils;
 import ml.util.ProcessingUtils;
 import processing.core.PVector;
 
+import static processing.core.PConstants.RGB;
+
 public class FaceDetector {
     PApplet parent; // reference to the parent sketch
 
@@ -57,7 +59,7 @@ public class FaceDetector {
                 new FaceDetectorTranslator(confThresh, nmsThresh, variance, topK, scales, steps);
 
         // To Do : load model from the Internet
-        String modelURL = "file:///Users/jlee/src/ml4processing/models/cv/face/retinaface-resnet50/saved_model/";
+        String modelURL = "file:///Users/jlee/src/ml4processing-models/models/cv/face/retinaface-resnet50/saved_model/";
         this.criteria = Criteria.builder()
                 .setTypes(Image.class, DetectedObjects.class)
                 .optModelUrls(modelURL)
@@ -68,7 +70,8 @@ public class FaceDetector {
         logger.info("successfully loaded!");
     }
 
-    private MLFace[] parseDetectedObjects(DetectedObjects detected) {
+    private MLFace[] parseDetectedObjects(DetectedObjects detected, int orgImgW, int orgImgH) {
+        int biggerDimension = Math.max(orgImgW, orgImgH);
         int numObjects = detected.getNumberOfObjects();
         MLFace[] faces = new MLFace[numObjects];
         for (int i = 0; i < numObjects; i++) {
@@ -78,17 +81,16 @@ public class FaceDetector {
             String className = d.getClassName(); // get class name
             float probability = (float) d.getProbability(); // get probability
             Rectangle bound = d.getBoundingBox().getBounds(); // get bounding box
-            float x = (float) bound.getX();
-            float y = (float) bound.getY();
-//            PVector upperLeft = new PVector((float) bound.getX(), (float) bound.getY()); // get upper left corner of the bounding box
-            float width = (float) bound.getWidth(); // get width of the bounding box
-            float height = (float) bound.getHeight(); // get height of the bounding box
-
+            float x = (float) bound.getX() * biggerDimension;
+            float y = (float) bound.getY() * biggerDimension;
+            //  PVector upperLeft = new PVector((float) bound.getX(), (float) bound.getY()); // get upper left corner of the bounding box
+            float width = (float) bound.getWidth() * biggerDimension; // get width of the bounding box
+            float height = (float) bound.getHeight() * biggerDimension; // get height of the bounding box
             // convert landmark points
             List<PVector> landmarks = new ArrayList<>(); // create new landmark list
             Iterable<Point> landmarkPoints = d.getBoundingBox().getPath(); // get landmark points from Landmark object
             for (Point p : landmarkPoints) {
-                PVector l = new PVector((float) p.getX(), (float) p.getY());
+                PVector l = new PVector((float) p.getX()/640*biggerDimension, (float) p.getY()/640*biggerDimension);
                 landmarks.add(l); // add each element in the array
             }
 
@@ -98,43 +100,31 @@ public class FaceDetector {
         return faces;
     }
 
-    public MLFace[] detect(PImage pImg) {
-        BufferedImage buffImg = ProcessingUtils.PImagetoBuffImage(pImg);
-        Image img = ImageFactory.getInstance().fromImage(buffImg);
-
-        try (ZooModel<Image, DetectedObjects> model = criteria.loadModel()) {
-            try (Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
-                // detect objects
-                DetectedObjects detected = predictor.predict(img);
-                // parse DetectedObjects to a list of MLFace
-                MLFace[] detectedList = parseDetectedObjects(detected);
-                return detectedList;
-            } catch (TranslateException e) {
-                throw new RuntimeException(e);
-            }
-        } catch (ModelNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (MalformedModelException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    private PImage resizeToSquare(PImage orgImg) {
+        // copy resized image to a new square image
+        PImage squareImg = this.parent.createImage(640, 640, RGB);
+        // resize bigger side to 640 (default input size is 640 x 640 for RetinaFace model)
+        if (orgImg.width >= orgImg.height) {
+            squareImg.copy(orgImg, 0, 0, orgImg.width, orgImg.height, 0, 0, 640, 640*orgImg.height/orgImg.width);
+        } else {
+            squareImg.copy(orgImg, 0, 0, orgImg.width, orgImg.height, 0, 0, 640*orgImg.width/orgImg.height, 640);
         }
+        return squareImg;
     }
 
-    public MLFace[] detect(PImage pImg, Boolean saveOutputImg, String fileName) {
-        BufferedImage buffImg = ProcessingUtils.PImagetoBuffImage(pImg);
+    public MLFace[] detect(PImage pImg) {
+        // resize original image to square
+        PImage squareImg = resizeToSquare(pImg);
+        // convert PImage to Image
+        BufferedImage buffImg = ProcessingUtils.PImagetoBuffImage(squareImg);
         Image img = ImageFactory.getInstance().fromImage(buffImg);
-
+        // detect faces
         try (ZooModel<Image, DetectedObjects> model = criteria.loadModel()) {
             try (Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
                 // detect objects
                 DetectedObjects detected = predictor.predict(img);
                 // parse DetectedObjects to a list of MLFace
-                MLFace[] detectedList = parseDetectedObjects(detected);
-                // save bounding box image
-                if (saveOutputImg == true) {
-                    DJLUtils.saveBoundingBoxImage(this.parent, fileName, img, detected);
-                }
+                MLFace[] detectedList = parseDetectedObjects(detected, pImg.width, pImg.height);
                 return detectedList;
             } catch (TranslateException e) {
                 throw new RuntimeException(e);

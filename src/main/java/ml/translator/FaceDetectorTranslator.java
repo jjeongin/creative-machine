@@ -68,6 +68,7 @@ public class FaceDetectorTranslator implements Translator<Image, DetectedObjects
 //        height = 640;
         width = input.getWidth();
         height = input.getHeight();
+        System.out.println(width + " & " + height);
 
         array = array.transpose(2, 0, 1).flip(0); // H, W, C RGB -> C, H, W RGB -> C, H, W BGR
 
@@ -112,8 +113,8 @@ public class FaceDetectorTranslator implements Translator<Image, DetectedObjects
 
         // get landmarks
         NDArray landms = list.get(0);
-        //  landms = decodeLandm(landms, boxRecover, scaleXY); // 5 landmarks
-        landms = decodeLandm68(landms, boxRecover, scaleXY); // 68 landmarks
+        landms = decodeLandm(landms, boxRecover, scaleXY); // 5 landmarks
+//        landms = decodeLandm68(landms, boxRecover, scaleXY); // 68 landmarks
 
         // filter the result with the threshold
         NDArray cutOff = prob.get(1).gt(confThresh);
@@ -148,8 +149,8 @@ public class FaceDetectorTranslator implements Translator<Image, DetectedObjects
             }
             if (belowIoU) {
                 List<Point> keyPoints = new ArrayList<>(); // list of landmarks
-                System.out.println(landms.size() + " | " + landms.size(1));
-                for (int j = 0; j < landms.size(); j++) { // 5 face landmarks
+//                System.out.println(landms.size() + " | " + landms.size(1)); // TEST
+                for (int j = 0; j < landms.size(1)/2; j++) { // 5 face landmarks
                     float x = landmsArr[j * 2];
                     float y = landmsArr[j * 2 + 1];
                     keyPoints.add(new Point(x * width, y * height));
