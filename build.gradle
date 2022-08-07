@@ -46,16 +46,16 @@ dependencies {
     implementation group: 'org.slf4j', name: 'slf4j-simple', version: "$slf4jVersion"
 
     // DLJ
-    implementation group: 'ai.djl', name: 'api', version: '0.17.0'
+    implementation group: 'ai.djl', name: 'api', version: "$djlVersion"
     implementation group: 'ai.djl.tensorflow', name: 'tensorflow-api', version: "$djlVersion"
     implementation group: 'ai.djl.tensorflow', name: 'tensorflow-engine', version: "$djlVersion"
     implementation group: 'ai.djl.tensorflow', name: 'tensorflow-model-zoo', version: "$djlVersion"
         
     // DLJ tensorflow engine: http://djl.ai/engines/tensorflow/tensorflow-engine/
     implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: "$djlTensorflowNativeVersion"
-    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: "$djlTensorflowNativeVersion", classifier: 'osx-x86_64'
-    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: "$djlTensorflowNativeVersion", classifier: 'linux-x86_64'
-    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: "$djlTensorflowNativeVersion", classifier: 'win-x86_64'
+    // implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: "$djlTensorflowNativeVersion", classifier: 'osx-x86_64'
+    // implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: "$djlTensorflowNativeVersion", classifier: 'linux-x86_64'
+    // implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: "$djlTensorflowNativeVersion", classifier: 'win-x86_64'
 
     // DJL MXNet engine
     implementation group: 'ai.djl.mxnet', name: 'mxnet-engine', version: "$djlVersion"
