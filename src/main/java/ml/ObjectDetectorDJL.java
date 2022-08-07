@@ -124,7 +124,7 @@ public class ObjectDetectorDJL {
                     .setTypes(Image.class, DetectedObjects.class)
                     .optModelUrls(String.valueOf(url))
                     // saved_model.pb file is in the subfolder of the model archive file
-                    .optModelName("ssd_mobilenet_v2_320x320_coco17_tpu-8/saved_model/") // how to get general model name?
+                    .optModelName(ProcessingUtils.getFileNameFromPath(modelNameOrURL)) // how to get general model name?
                     .optTranslator(new ObjectDetectorTranslator())
                     .optEngine("TensorFlow")
                     .build();
