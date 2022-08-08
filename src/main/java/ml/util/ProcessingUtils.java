@@ -2,6 +2,8 @@ package ml.util;
 
 import processing.core.PImage;
 
+import java.io.File;
+
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
 
@@ -22,5 +24,17 @@ public class ProcessingUtils {
         WritableRaster wr = image.getRaster();
         wr.setDataElements(0, 0, pImg.pixelWidth, pImg.pixelHeight, pImg.pixels);
         return image;
+    }
+
+    public static String getFileNameFromPath(String path) {
+        File file = new File(path);
+        String name = file.getName();
+        if (name == null || name.isEmpty()) {
+            return "unnamed";
+        }
+
+        // From https://www.baeldung.com/java-filename-without-extension
+        String extPattern = "(?<!^)[.].*";
+        return name.replaceAll(extPattern, "");
     }
 }
