@@ -1,7 +1,7 @@
 # Object Detector
 Object Detection model 
 
-<img src="./data/object-detector/dog_bike_car_output_from_url.png" width="300">
+<img src="../data/object-detector/dog_bike_car_output_from_url.png" width="500">
 
 ## Quick Start
 ```
@@ -15,11 +15,11 @@ PImage img = loadImage("data/dog_bike_car.jpeg");
 MLObject[] output = detector.detect(img);
 ```
 
-# Usage
-## Initialize
+## Usage
+### Initialize
 ```
 
 ```
-## Methods
+### Methods
 
-# Examples
+## Examples
