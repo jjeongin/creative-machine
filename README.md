@@ -30,7 +30,7 @@ The library can be imported as an IntelliJ project following the steps below:
 
 ```
 import processing.core.*;
-import ml.ObjectDetectorDJL;
+import ml.ObjectDetector;
 
 public class DetectTest extends PApplet {
     ObjectDetectorDJL detector;

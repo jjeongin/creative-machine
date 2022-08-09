@@ -6,7 +6,6 @@ import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
 import ai.djl.modality.cv.output.DetectedObjects;
-import ai.djl.modality.cv.output.Point;
 import ai.djl.modality.cv.output.Rectangle;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
@@ -21,13 +20,10 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.List;
 
 import processing.core.PApplet;
 import processing.core.PImage;
-import processing.core.PVector;
 
-import ml.MLObject;
 import ml.translator.ObjectDetectorTranslator;
 import ml.util.ProcessingUtils;
 import ml.util.DJLUtils;
@@ -37,12 +33,12 @@ import ml.util.DJLUtils;
  * @example ObjectDetectorDJLExample
  *
  */
-public class ObjectDetectorDJL {
+public class ObjectDetector {
     PApplet parent; // reference to the parent sketch
     private Criteria<Image, DetectedObjects> criteria; // model
 
     private static final Logger logger =
-            LoggerFactory.getLogger(ObjectDetectorDJL.class);
+            LoggerFactory.getLogger(ml.ObjectDetector.class);
 
     /**
      * constructor
@@ -50,23 +46,16 @@ public class ObjectDetectorDJL {
      * @param modelNameOrURL : model name to load (choose from object detection models in tf model zoo)
      *                         if not in the model zoo, try to load as URL
      */
-    public ObjectDetectorDJL(PApplet myParent, String modelNameOrURL) {
+    public ObjectDetector(PApplet myParent, String modelNameOrURL) {
         this.parent = myParent;
         logger.info("model loading..");
 
+        // using remote url
 //        String modelUrl =
 //                "http://download.tensorflow.org/models/object_detection/tf2/20200711/ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8.tar.gz";
 
-//        String backbone;
-//        if ("TensorFlow".equals(Engine.getDefaultEngineName())) {
-//            backbone = "mobilenet_v2";
-//        } else {
-//            backbone = "resnet50";
-//        }
-//        backbone = "resnet50";
-
-        // Select the model to use
-        // SSD from TensorFlow engine
+        // Select a model to use
+        // Open SSD from TensorFlow engine
         // Available models : ssd {"backbone":"mobilenet_v2","dataset":"openimages_v4"}
         if (modelNameOrURL.equals("openimages_ssd")) {
             this.criteria = Criteria.builder()
@@ -76,7 +65,7 @@ public class ObjectDetectorDJL {
                     .optEngine("TensorFlow")
                     .build();
         }
-        // SSD from MXNet engine
+        // Coco SSD from MXNet engine
         // Available models :
         // ssd_512_resnet50_v1_voc {"size":"512","backbone":"resnet50","flavor":"v1","dataset":"voc"}
         // ssd_512_vgg16_atrous_coco {"size":"512","backbone":"vgg16","flavor":"atrous","dataset":"coco"}
@@ -104,9 +93,9 @@ public class ObjectDetectorDJL {
                     .optEngine("MXNet")
                     .build();
         }
-        // if modelNameOrURL is URL
+        // if user passed remote URL or local path
         else {
-            // check if URL is valid (source: https://stackoverflow.com/questions/2230676/how-to-check-for-a-valid-url-in-java)
+            // check if the URL is valid (source: https://stackoverflow.com/questions/2230676/how-to-check-for-a-valid-url-in-java)
             URL url = null; // check for the URL protocol
             try {
                 url = new URL(modelNameOrURL);
@@ -124,7 +113,7 @@ public class ObjectDetectorDJL {
                     .setTypes(Image.class, DetectedObjects.class)
                     .optModelUrls(String.valueOf(url))
                     // saved_model.pb file is in the subfolder of the model archive file
-                    .optModelName(ProcessingUtils.getFileNameFromPath(modelNameOrURL)) // how to get general model name?
+                    .optModelName(ProcessingUtils.getFileNameFromPath(modelNameOrURL))
                     .optTranslator(new ObjectDetectorTranslator())
                     .optEngine("TensorFlow")
                     .build();

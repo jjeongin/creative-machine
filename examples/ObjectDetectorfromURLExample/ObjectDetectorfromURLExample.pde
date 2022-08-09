@@ -1,6 +1,6 @@
 import ml.*;
 
-ObjectDetectorDJL detectorDJL;
+ObjectDetector detector;
 String outputName;
 PImage orgImg;
 MLObject[] results;
@@ -8,15 +8,17 @@ MLObject[] results;
 void setup() {
     size(768, 576);
 
-    String modelName = "http://download.tensorflow.org/models/object_detection/tf2/20200711/ssd_mobilenet_v2_320x320_coco17_tpu-8.tar.gz";
+    // remote url to model file
+    String modelURL = "http://download.tensorflow.org/models/object_detection/tf2/20200711/ssd_mobilenet_v2_320x320_coco17_tpu-8.tar.gz";
     String imgName = "dog_bike_car"; // "dog_bike_car" or "kite_people"
 
-    detectorDJL = new ObjectDetectorDJL(this, modelName);
+    // load object detector
+    detector = new ObjectDetector(this, modelURL);
     orgImg = loadImage( "data/" + imgName + ".jpeg");
 
     // run object detection and save output image
     outputName = imgName + "_output_from_url.png";
-    results = detectorDJL.detect(orgImg, true, outputName);
+    results = detector.detect(orgImg, true, outputName);
 
     // print each detected object and its probability
     for (int i = 0; i < results.length; i++) {

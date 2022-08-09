@@ -1,6 +1,6 @@
 import ml.*;
 
-ObjectDetectorDJL detectorDJL;
+ObjectDetector detector;
 String outputName;
 PImage orgImg;
 MLObject[] results;
@@ -11,12 +11,12 @@ void setup() {
     String modelName = "cocossd"; // "openimages_ssd", "cocossd", or "yolo"
     String imgName = "dog_bike_car"; // "dog_bike_car" or "kite_people"
 
-    detectorDJL = new ObjectDetectorDJL(this, modelName);
+    detectorDJL = new ObjectDetector(this, modelName);
     orgImg = loadImage( "data/" + imgName + ".jpeg");
 
     // run object detection and save output image
     outputName = imgName + "_output_" + modelName + ".png";
-    results = detectorDJL.detect(orgImg, true, outputName);
+    results = detector.detect(orgImg, true, outputName);
 
     // print each detected object and its probability
     for (int i = 0; i < results.length; i++) {
