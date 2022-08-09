@@ -1,7 +1,7 @@
 # Object Detector
 Object Detection model 
 
-<img src="data/object-detector/dog_bike_car_output_from_url.png" width="300">
+<img src="./data/object-detector/dog_bike_car_output_from_url.png" width="300">
 
 ## Quick Start
 ```
