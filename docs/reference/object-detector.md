@@ -33,12 +33,12 @@ MLObject[] output = detector.detect(img);
 // run object detection and save bounding box image
 MLObject[] output = detector.detect(img, true, "data/dog_bike_car_output.png");
 ```
-***input***
+***Input***
 - PImage image: (required) Image to run object detection on.
 - Boolean saveBoundingBoxImage: (optional) true or false
 - String fileName: (optional) File name to store the output image. Should be **.png** files only. Saved under the Processing sketch directory by default, specify the subdirectory name to save under an existing directory within the sketch directory. If null, the image is saved as "output.png" under the sketch directory.
 
-***output***
+***Output***
 - MLObject[]: List of [MLObject](). 
 
 ## Examples
