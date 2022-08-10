@@ -1,5 +1,5 @@
 # Object Detector
-Object Detection model 
+Detect objects from a PImage.
 
 <img src="../data/object_detector_demo.png" width="500">
 
