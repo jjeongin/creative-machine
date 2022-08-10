@@ -209,7 +209,7 @@ public class ObjectDetector {
      * @param pImg, saveOutputImg, fileName
      * @return MLObject[]
      */
-    public MLObject[] detect(PImage pImg, Boolean saveOutputImg, String fileName) {
+    public MLObject[] detect(PImage pImg, Boolean saveBoundingBoxImage, String fileName) {
         // get original image size
         int orgImgW = pImg.width;
         int orgImgH = pImg.height;
@@ -223,7 +223,7 @@ public class ObjectDetector {
                 // parse DetectedObjects to a list of MLObject
                 MLObject[] results = DetectedObjectsToMLObjects(detected, orgImgW, orgImgH);
                 // save bounding box image
-                if (saveOutputImg == true) {
+                if (saveBoundingBoxImage == true) {
                     DJLUtils.saveBoundingBoxImage(this.parent, fileName, img, detected);
                 }
                 return results;

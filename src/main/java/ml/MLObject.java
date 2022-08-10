@@ -9,19 +9,16 @@ public class MLObject {
 
     public MLObject(String label, float confidence, float x, float y, float width, float height) {
         this.label = label;
-        this.confidence = confidence;
-        // TO DO : change these to x, y, width, height in original image scale like ml5
-        //         change these to public variable ?
-//        this.upperLeft = upperLeft; // value scaled from 0 to 1
-        this.x = x;
-        this.y = y;
-        this.width = width; // value scaled from 0 to 1
-        this.height = height; // value scaled from 0 to 1
+        this.confidence = confidence; // confidence score of the detection (form 0 to 1)
+        this.x = x; // x coordinate of the upper left corner of the bounding box
+        this.y = y; // y coordinate of the upper left corner of the bounding box
+        this.width = width; // width of the bounding box
+        this.height = height; // height of the bounding box
     }
 
     public MLObject(String label, float confidence) {
         this.label = label;
-        this.confidence = confidence;
+        this.confidence = confidence; // confidence score of the classification (form 0 to 1)
     }
 
     public String getLabel() {

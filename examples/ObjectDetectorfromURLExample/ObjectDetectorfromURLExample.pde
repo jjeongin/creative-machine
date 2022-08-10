@@ -14,7 +14,7 @@ void setup() {
 
     // load image
     String imgName = "dog_bike_car"; // "dog_bike_car" or "kite_people"
-    img = loadImage( "data/" + imgName + ".jpeg");
+    img = loadImage("data/" + imgName + ".jpeg");
 
     // run object detection and save output image
     outputName = imgName + "_output_from_url.png";
