@@ -10,7 +10,7 @@ void setup() {
     textFont(font);
 
     // load model
-    sentiment = new Sentiment(this, "data/distilbert-sst2/saved_model/");
+    sentiment = new Sentiment(this, "distilbert");
 
     // define input
     String input = "Machine Learning is fun.";
