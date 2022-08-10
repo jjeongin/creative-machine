@@ -20,7 +20,7 @@ public class DJLUtils {
      * @param detected
      */
     public static void saveBoundingBoxImage(PApplet parent, String fileName, Image img, DetectedObjects detected) {
-        // Default output path as parent sketch directory
+        // set output path as the Processing sketch's directory
         Path outputDir = Paths.get(parent.sketchPath());
         try {
             Files.createDirectories(outputDir);
@@ -28,16 +28,25 @@ public class DJLUtils {
             throw new RuntimeException(e);
         }
 
+        // draw bounding boxes with DJL function
         img.drawBoundingBoxes(detected);
 
-        Path imagePath = outputDir.resolve(fileName);
+        // set filename
+        Path imagePath;
+        if (fileName != null) { // use user-specified filename
+            imagePath = outputDir.resolve(fileName);
+        }
+        else { // if filename is null, use default filename
+            imagePath = outputDir.resolve("output.png");
+        }
+
         // OpenJDK can't save jpg with alpha channel
         try {
             img.save(Files.newOutputStream(imagePath), "png");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        System.out.println("Detected objects image has been saved in: " + imagePath);
+        System.out.println("Output image has been saved in: " + imagePath);
     }
 
     public static <T, K> void printInputOutputInfo(ZooModel<T, K> model) {

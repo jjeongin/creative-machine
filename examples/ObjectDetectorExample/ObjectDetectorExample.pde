@@ -1,38 +1,38 @@
 import ml.*;
 
 ObjectDetector detector;
+PImage img;
+MLObject[] output;
 String outputName;
-PImage orgImg;
-MLObject[] results;
 
 void setup() {
     size(768, 576);
 
+    // load object detector
     String modelName = "cocossd"; // "openimages_ssd", "cocossd", or "yolo"
-    String imgName = "dog_bike_car"; // "dog_bike_car" or "kite_people"
+    detector = new ObjectDetector(this, modelName);
 
-    detectorDJL = new ObjectDetector(this, modelName);
-    orgImg = loadImage( "data/" + imgName + ".jpeg");
+    // load image
+    String imgName = "dog_bike_car"; // "dog_bike_car" or "kite_people"
+    img = loadImage( "data/" + imgName + ".jpeg");
 
     // run object detection and save output image
     outputName = imgName + "_output_" + modelName + ".png";
-    results = detector.detect(orgImg, true, outputName);
+    results = detector.detect(img, true, outputName);
 
-    // print each detected object and its probability
+    // print label and confidence of each object
     for (int i = 0; i < results.length; i++) {
-        println(results[i].getLabel() + " detected! (probability: " + results[i].getConfidence() + ")");
+        println(results[i].getLabel() + " detected! (confidence: " + results[i].getConfidence() + ")");
     }
 }
 
 void draw() {
-   // draw bounding boxes of detected objects on the original image
-   image(orgImg, 0, 0);
+   // draw bounding box of each object
+   image(img, 0, 0);
    noFill();
    stroke(255, 0, 0);
    for (int i = 0; i < results.length; i++) {
        MLObject obj = results[i];
-       // multiply by image width & height to draw each bounding box on right position
-       rect(obj.getUpperLeft().x * orgImg.width, obj.getUpperLeft().y * orgImg.height,
-               obj.getWidth() * orgImg.width, obj.getHeight() * orgImg.height);
+       rect(obj.getX(), obj.getY(), obj.getWidth(), obj.getHeight());
    }
 }

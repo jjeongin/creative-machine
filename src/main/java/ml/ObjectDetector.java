@@ -5,6 +5,7 @@ import ai.djl.*;
 import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
+import ai.djl.modality.cv.output.BoundingBox;
 import ai.djl.modality.cv.output.DetectedObjects;
 import ai.djl.modality.cv.output.Rectangle;
 import ai.djl.repository.zoo.Criteria;
@@ -20,6 +21,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import processing.core.PApplet;
 import processing.core.PImage;
@@ -27,6 +30,7 @@ import processing.core.PImage;
 import ml.translator.ObjectDetectorTranslator;
 import ml.util.ProcessingUtils;
 import ml.util.DJLUtils;
+import ml.MLObject;
 
 /**
  * Object Detector using Deep Java Library
@@ -124,48 +128,71 @@ public class ObjectDetector {
 
     // HELPER METHODS --------------------------------------------------
     /**
-     * Parse each object in DetectedObjects into DetectedObjectDJL[]
-     * @param detected
-     * @return DetectedObjectDJL[]
+     * Convert each object in DetectedObjects to MLObject
+     * @param detected, originalImgWidth, originalImgHeight
+     * @return MLObject[]
      */
-    private MLObject[] parseDetectedObjects(DetectedObjects detected) {
+    private MLObject[] DetectedObjectsToMLObjects(DetectedObjects detected, int originalImgWidth, int originalImgHeight) {
         int numObjects = detected.getNumberOfObjects();
         MLObject[] objectList = new MLObject[numObjects];
         for (int i = 0; i < numObjects; i++) {
             // get the ith detected object
             DetectedObjects.DetectedObject d = detected.item(i);
-            // retrieve information from a detected object
             String className = d.getClassName(); // get class name
             float probability = (float) d.getProbability(); // get probability
-            Rectangle bound = d.getBoundingBox().getBounds(); // get bounding box
-            float x = (float) bound.getX();
-            float y = (float) bound.getY();
-//            PVector upperLeft = new PVector((float) bound.getX(), (float) bound.getY()); // get upper left corner of the bounding box
-            float width = (float) bound.getWidth(); // get width of the bounding box
-            float height = (float) bound.getHeight(); // get height of the bounding box
-            // add each object to the list as DetectedObjectDJL
+            // get bounding box
+            Rectangle bound = d.getBoundingBox().getBounds();
+            float x = (float) bound.getX() * originalImgWidth; // get upper left corner of the bounding box
+            float y = (float) bound.getY() * originalImgHeight;
+            //  PVector upperLeft = new PVector((float) bound.getX(), (float) bound.getY());
+            float width = (float) bound.getWidth() * originalImgWidth; // get width of the bounding box
+            float height = (float) bound.getHeight() * originalImgHeight; // get height of the bounding box
+            // convert each object as MLObject
             objectList[i] = new MLObject(className, probability, x, y, width, height);
         }
         return objectList;
+    }
+
+    /**
+     * Convert objects in MLObject[] to DetectedObjects
+     * @param objectList, originalImgWidth, originalImgHeight
+     * @return MLObject[]
+     */
+    private DetectedObjects DetectedObjectsToMLObjects(MLObject[] objectList, int originalImgWidth, int originalImgHeight) {
+        int numObjects = objectList.length;
+        List<String> classNames = new ArrayList<>();
+        List<Double> probabilities = new ArrayList<>();
+        List<BoundingBox> boundingBoxes = new ArrayList<>();
+        for (int i = 0; i < numObjects; i++) {
+            MLObject object = objectList[i];
+            classNames.add(object.getLabel());
+            probabilities.add((double) object.getConfidence());
+//            boundingBoxes.add()
+        }
+        DetectedObjects objects = new DetectedObjects(classNames, probabilities, boundingBoxes);
+        return objects;
     }
     // --------------------------------------------------
 
     /**
      * Run object detection on given PImage
      * @param pImg
-     * @return DetectedObjects
+     * @return MLObject[]
      */
     public MLObject[] detect(PImage pImg) {
-        BufferedImage buffImg = ProcessingUtils.PImagetoBuffImage(pImg);
+        // get original image size
+        int originalImgWidth = pImg.width;
+        int originalImgHeight = pImg.height;
+        // convert PImage to DJL Image
+        BufferedImage buffImg = ProcessingUtils.PImageToBuffImage(pImg);
         Image img = ImageFactory.getInstance().fromImage(buffImg);
-
         try (ZooModel<Image, DetectedObjects> model = this.criteria.loadModel()) {
             try (Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
                 // detect objects
-                DetectedObjects detected = predictor.predict(img);
-                // parse DetectedObjects to a list of Object
-                MLObject[] detectedList = parseDetectedObjects(detected);
-                return detectedList;
+                DetectedObjects objects = predictor.predict(img);
+                // parse DetectedObjects to a list of MLObject
+                MLObject[] objectList = DetectedObjectsToMLObjects(objects, originalImgWidth, originalImgHeight);
+                return objectList;
             } catch (TranslateException e) {
                 throw new RuntimeException(e);
             }
@@ -177,22 +204,29 @@ public class ObjectDetector {
             throw new RuntimeException(e);
         }
     }
-
+    /**
+     * Run object detection on given PImage and save output image
+     * @param pImg, saveOutputImg, fileName
+     * @return MLObject[]
+     */
     public MLObject[] detect(PImage pImg, Boolean saveOutputImg, String fileName) {
-        BufferedImage buffImg = ProcessingUtils.PImagetoBuffImage(pImg);
+        // get original image size
+        int orgImgW = pImg.width;
+        int orgImgH = pImg.height;
+        // convert PImage to DJL Image
+        BufferedImage buffImg = ProcessingUtils.PImageToBuffImage(pImg);
         Image img = ImageFactory.getInstance().fromImage(buffImg);
-
         try (ZooModel<Image, DetectedObjects> model = criteria.loadModel()) {
             try (Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
                 // detect objects
                 DetectedObjects detected = predictor.predict(img);
                 // parse DetectedObjects to a list of MLObject
-                MLObject[] detectedList = parseDetectedObjects(detected);
+                MLObject[] results = DetectedObjectsToMLObjects(detected, orgImgW, orgImgH);
                 // save bounding box image
                 if (saveOutputImg == true) {
                     DJLUtils.saveBoundingBoxImage(this.parent, fileName, img, detected);
                 }
-                return detectedList;
+                return results;
             } catch (TranslateException e) {
                 throw new RuntimeException(e);
             }
@@ -204,4 +238,16 @@ public class ObjectDetector {
             throw new RuntimeException(e);
         }
     }
+
+//    public void saveBoundingBoxImage(PImage pImg, MLObject[] objectList, String fileName) {
+//        // get original image size
+//        int originalImgWidth = pImg.width;
+//        int originalImgHeight = pImg.height;
+//        // convert PImage to DJL Image
+//        BufferedImage buffImg = ProcessingUtils.PImageToBuffImage(pImg);
+//        Image img = ImageFactory.getInstance().fromImage(buffImg);
+//
+//        DetectedObjects objects = DetectedObjectsToMLObjects(objectList, originalImgWidth, originalImgHeight);
+//        DJLUtils.saveBoundingBoxImage(this.parent, fileName, img, objects);
+//    }
 }

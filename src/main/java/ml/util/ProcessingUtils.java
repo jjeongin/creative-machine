@@ -15,7 +15,7 @@ public class ProcessingUtils {
      * @param pImg
      * @return BufferedImage
      */
-    public static BufferedImage PImagetoBuffImage(PImage pImg) {
+    public static BufferedImage PImageToBuffImage(PImage pImg) {
         pImg.loadPixels();
         int type = (pImg.format == RGB) ?
                 BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;

@@ -1,24 +1,18 @@
 package ml;
 
 import ai.djl.Application;
-import ai.djl.Device;
 import ai.djl.MalformedModelException;
 import ai.djl.inference.Predictor;
 import ai.djl.modality.Classifications;
-import ai.djl.ndarray.types.Shape;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
-import ai.djl.training.util.DownloadUtils;
 import ai.djl.translate.TranslateException;
-import ai.djl.util.PairList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import processing.core.PApplet;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 import ml.translator.SentimentTranslator;
@@ -62,7 +56,7 @@ public class Sentiment {
         logger.info("successfully loaded!");
     }
 
-    private MLObject[] parseClassifications(Classifications classified) {
+    private MLObject[] ClassificationsToMLObjects(Classifications classified) {
         List<Classifications.Classification> classifications = classified.items();
         MLObject[] objectList = new MLObject[2]; // [Negative, Positive]
         for (int i = 0; i < 2; i++) {
@@ -81,7 +75,7 @@ public class Sentiment {
             // run sentiment analysis
             Classifications classified = predictor.predict(input);
             // parse Classifications to a list of MLObject
-            MLObject[] results = parseClassifications(classified);
+            MLObject[] results = ClassificationsToMLObjects(classified);
             return results;
         } catch (ModelNotFoundException e) {
             throw new RuntimeException(e);

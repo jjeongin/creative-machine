@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.util.List;
 
 import ml.util.ProcessingUtils;
-import ml.*;
+import ml.MLObject;
 
 public class ImageClassifier {
     PApplet parent; // reference to the parent sketch
@@ -55,7 +55,7 @@ public class ImageClassifier {
         logger.info("successfully loaded!");
     }
 
-    private MLObject[] parseClassifications(Classifications classified) {
+    private MLObject[] ClassificationsToMLObjects(Classifications classified) {
         List<Classifications.Classification> topKClassifications = classified.topK();
         int numObjects = topKClassifications.size(); // default K is 5
         MLObject[] objectList = new MLObject[numObjects];
@@ -72,15 +72,15 @@ public class ImageClassifier {
     }
 
     public MLObject[] classify(PImage pImg) {
-        BufferedImage buffImg = ProcessingUtils.PImagetoBuffImage(pImg);
+        BufferedImage buffImg = ProcessingUtils.PImageToBuffImage(pImg);
         Image img = ImageFactory.getInstance().fromImage(buffImg);
 
         try (ZooModel<Image, Classifications> model = this.criteria.loadModel()) {
             try (Predictor<Image, Classifications> predictor = model.newPredictor()) {
                 // classify objects
                 Classifications classified = predictor.predict(img);
-                // parse Classifications to a list of Object
-                MLObject[] results = parseClassifications(classified);
+                // parse Classifications to a list of MLObject
+                MLObject[] results = ClassificationsToMLObjects(classified);
                 return results;
             } catch (TranslateException e) {
                 throw new RuntimeException(e);
