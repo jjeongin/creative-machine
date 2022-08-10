@@ -23,7 +23,7 @@ ObjectDetector detector = new ObjectDetector(this, modelNameorURL);
 #### Parameters
 String modelNameOrURL: (required) Can be a model name of built-in models ("openimages_ssd", "cocossd", or "yolo") or a remote url/file path to a parent directory containing TensorFlow saved_model folder
 ### Methods
-detect(PImage image, Boolean saveBoundingBoxImage, String fileName): Runs object detection on [PImage](https://processing.org/reference/PImage.html) and a save bounding box image with the specified file name. Returns an array of [MLObject]().
+detect(PImage image, Boolean saveBoundingBoxImage, String fileName): Runs object detection on [PImage](https://processing.org/reference/PImage.html) and returns an array of [MLObject](). (optional) If saveBoundingBoxImage is true, it also saves bounding box image with the specified filename.
 ```
 PImage img = loadImage("data/dog_bike_car.jpeg"); // input image
 
