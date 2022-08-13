@@ -28,7 +28,7 @@ public class SentimentTranslator implements Translator<String, Classifications> 
     @Override
     public void prepare(TranslatorContext ctx) throws IOException {
             Model model = ctx.getModel();
-            URL url = model.getArtifact("vocab.txt"); // load vocab list from local
+            URL url = model.getArtifact("distilbert-sst2/vocab.txt"); // load vocab list from local
 //        URL url = new URL("https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english/resolve/main/vocab.txt");
         vocabulary =
                 DefaultVocabulary.builder().addFromTextFile(url).optUnknownToken("[UNK]").build();

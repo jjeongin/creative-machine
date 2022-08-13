@@ -17,6 +17,7 @@ import java.util.List;
 
 import ml.translator.SentimentTranslator;
 import ml.MLObject;
+import ml.util.ProcessingUtils;
 
 public class Sentiment {
     PApplet parent; // reference to the parent sketch
@@ -26,31 +27,22 @@ public class Sentiment {
     private static final Logger logger =
             LoggerFactory.getLogger(Sentiment.class);
 
-    public Sentiment(PApplet myParent) {
+    public Sentiment(PApplet myParent, String modelNameOrURL) {
         this.parent = myParent;
         logger.info("model loading..");
 
-        // load distilbert model finetuned on SST2
-        String modelNameorURL = "distilbert-sst2/saved_model/";
-
-        String sketchPath = myParent.sketchPath();
-        String modelPath = sketchPath + "/" + modelNameorURL;
-        logger.info("model found at: " + modelPath);
-
-        // another method?
-//        Path modelPath = Paths.get(modelNameorURL);
-//        Path absolutePath = modelPath.toAbsolutePath();
-//        System.out.println(absolutePath);
+        if (modelNameOrURL.equals("distilbert")) {
+            modelNameOrURL = "https://www.dropbox.com/s/j8hkvqqm4a9awcy/distilbert-sst2.zip?dl=1";
+        }
 
         this.criteria =
                 Criteria.builder()
                         .optApplication(Application.NLP.SENTIMENT_ANALYSIS)
                         .setTypes(String.class, Classifications.class)
-                        .optModelUrls(modelPath)
+                        .optModelUrls(modelNameOrURL)
+                        .optModelName(ProcessingUtils.getFileNameFromPath(modelNameOrURL)+"/saved_model")
                         .optTranslator(new SentimentTranslator())
                         .optEngine("TensorFlow")
-//                        // This model was traced on CPU and can only run on CPU
-//                        .optDevice(Device.cpu())
                         .build();
 
         logger.info("successfully loaded!");

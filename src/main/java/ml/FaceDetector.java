@@ -58,7 +58,6 @@ public class FaceDetector {
         FaceDetectorTranslator translator =
                 new FaceDetectorTranslator(confThresh, nmsThresh, variance, topK, scales, steps);
 
-        // To Do : load model from the Internet
         String modelURL = "file:///Users/jlee/src/ml4processing-models/models/cv/face/retinaface-resnet50/saved_model/";
         this.criteria = Criteria.builder()
                 .setTypes(Image.class, DetectedObjects.class)
@@ -116,7 +115,7 @@ public class FaceDetector {
         // resize original image to square
         PImage squareImg = resizeToSquare(pImg);
         // convert PImage to Image
-        BufferedImage buffImg = ProcessingUtils.PImagetoBuffImage(squareImg);
+        BufferedImage buffImg = ProcessingUtils.PImageToBuffImage(squareImg);
         Image img = ImageFactory.getInstance().fromImage(buffImg);
         // detect faces
         try (ZooModel<Image, DetectedObjects> model = criteria.loadModel()) {

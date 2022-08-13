@@ -81,7 +81,7 @@ public class PoseNet {
     }
 
     public MLPose predict(PImage pImg) {
-        BufferedImage buffImg = ProcessingUtils.PImagetoBuffImage(pImg);
+        BufferedImage buffImg = ProcessingUtils.PImageToBuffImage(pImg);
         Image img = ImageFactory.getInstance().fromImage(buffImg);
 
         // find a person in image using object detection
