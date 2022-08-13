@@ -12,17 +12,13 @@ public void setup() {
     poseNet = new PoseNet(this, "ResNet");
 
     // load image
-    img = loadImage("data/pose_soccer.png");
+    img = loadImage("pose_soccer.png");
 
     // detect pose
     pose = poseNet.predict(img);
 }
 
 public void draw() {
-    // display output image
-    // PImage output = loadImage("joints.png");
-    // image(output, 0, 0);
-
     // display original image
     image(img, 0, 0);
 

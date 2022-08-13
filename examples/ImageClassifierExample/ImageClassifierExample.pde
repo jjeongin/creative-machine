@@ -13,7 +13,7 @@ void setup() {
     classifier = new ImageClassifier(this, modelName);
 
     // load image
-    img = loadImage("data/bird.jpeg");
+    img = loadImage("bird.jpeg");
 
     // classify
     results = classifier.classify(img);
