@@ -117,7 +117,7 @@ public class ObjectDetector {
                     .setTypes(Image.class, DetectedObjects.class)
                     .optModelUrls(String.valueOf(url))
                     // saved_model.pb file is in the subfolder of the model archive file
-                    .optModelName(ProcessingUtils.getFileNameFromPath(modelNameOrURL))
+                    .optModelName(ProcessingUtils.getFileNameFromPath(modelNameOrURL)+"/saved_model")
                     .optTranslator(new ObjectDetectorTranslator())
                     .optEngine("TensorFlow")
                     .build();

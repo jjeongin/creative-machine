@@ -14,15 +14,15 @@ void setup() {
 
     // load image
     String imgName = "dog_bike_car"; // "dog_bike_car" or "kite_people"
-    img = loadImage("data/" + imgName + ".jpeg");
+    img = loadImage(imgName + ".jpeg");
 
     // run object detection and save output image
-    outputName = imgName + "_output_from_url.png";
-    results = detector.detect(img, true, outputName);
+    outputName = "data/" + imgName + "_output_from_url.png";
+    output = detector.detect(img, true, outputName);
 
     // print label and confidence of each object
-    for (int i = 0; i < results.length; i++) {
-        println(results[i].getLabel() + " detected! (confidence: " + results[i].getConfidence() + ")");
+    for (int i = 0; i < output.length; i++) {
+        println(output[i].getLabel() + " detected! (confidence: " + output[i].getConfidence() + ")");
     }
 }
 
@@ -31,8 +31,8 @@ void draw() {
    image(img, 0, 0);
    noFill();
    stroke(255, 0, 0);
-   for (int i = 0; i < results.length; i++) {
-       MLObject obj = results[i];
+   for (int i = 0; i < output.length; i++) {
+       MLObject obj = output[i];
        rect(obj.getX(), obj.getY(), obj.getWidth(), obj.getHeight());
    }
 }
