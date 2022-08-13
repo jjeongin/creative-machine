@@ -12,7 +12,7 @@ void setup() {
     detector = new FaceDetector(this);
 
     // load image
-    img = loadImage("data/largest_selfie.jpeg");
+    img = loadImage("largest_selfie.jpeg");
 
     // detect faces
     faces = detector.detect(img);

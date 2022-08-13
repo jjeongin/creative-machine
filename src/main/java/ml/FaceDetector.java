@@ -58,10 +58,12 @@ public class FaceDetector {
         FaceDetectorTranslator translator =
                 new FaceDetectorTranslator(confThresh, nmsThresh, variance, topK, scales, steps);
 
-        String modelURL = "file:///Users/jlee/src/ml4processing-models/models/cv/face/retinaface-resnet50/saved_model/";
+        // 5 landmarks
+        String modelNameOrURL = "https://www.dropbox.com/s/b9rvq4cz4tniw5e/retinaface-mobilenet.zip?dl=1";
         this.criteria = Criteria.builder()
                 .setTypes(Image.class, DetectedObjects.class)
-                .optModelUrls(modelURL)
+                .optModelUrls(modelNameOrURL)
+                .optModelName(ProcessingUtils.getFileNameFromPath(modelNameOrURL)+"/saved_model")
                 .optTranslator(translator)
                 .optEngine("TensorFlow") // Use TensorFlow engine
                 .build();
