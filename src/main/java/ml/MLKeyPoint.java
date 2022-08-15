@@ -3,6 +3,11 @@ package ml;
 public class MLKeyPoint {
     private float x, y, confidence;
 
+    public MLKeyPoint(float x, float y) {
+        this.x = x;
+        this.y = y;
+    }
+
     public MLKeyPoint(float x, float y, float confidence) {
         this.x = x;
         this.y = y;
