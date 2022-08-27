@@ -23,6 +23,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import processing.core.PApplet;
 import processing.core.PImage;
@@ -39,7 +40,8 @@ import ml.MLObject;
  */
 public class ObjectDetector {
     PApplet parent; // reference to the parent sketch
-    private Criteria<Image, DetectedObjects> criteria; // model
+    private Criteria<Image, DetectedObjects> criteria; // criteria for selecting the model
+    private Predictor<Image, DetectedObjects> predictor; // predictor
 
     private static final Logger logger =
             LoggerFactory.getLogger(ml.ObjectDetector.class);
@@ -53,10 +55,6 @@ public class ObjectDetector {
     public ObjectDetector(PApplet myParent, String modelNameOrURL) {
         this.parent = myParent;
         logger.info("model loading..");
-
-        // using remote url
-//        String modelUrl =
-//                "http://download.tensorflow.org/models/object_detection/tf2/20200711/ssd_mobilenet_v2_fpnlite_640x640_coco17_tpu-8.tar.gz";
 
         // Select a model to use
         // Open SSD from TensorFlow engine
@@ -75,7 +73,7 @@ public class ObjectDetector {
         // ssd_512_vgg16_atrous_coco {"size":"512","backbone":"vgg16","flavor":"atrous","dataset":"coco"}
         // ssd_512_mobilenet1.0_voc {"size":"512","backbone":"mobilenet1.0","dataset":"voc"}
         // ssd_300_vgg16_atrous_voc {"size":"300","backbone":"vgg16","flavor":"atrous","dataset":"voc"}
-        else if (modelNameOrURL.equals("cocossd")) {
+        else if (modelNameOrURL.equals("coco_ssd")) {
             this.criteria = Criteria.builder()
                     .optApplication(Application.CV.OBJECT_DETECTION)
                     .setTypes(Image.class, DetectedObjects.class)
@@ -84,15 +82,34 @@ public class ObjectDetector {
                     .optEngine("MXNet")
                     .build();
         }
+        else if (modelNameOrURL.equals("voc_ssd")) {
+            this.criteria = Criteria.builder()
+                    .optApplication(Application.CV.OBJECT_DETECTION)
+                    .setTypes(Image.class, DetectedObjects.class)
+                    .optFilter("backbone", "mobilenet1.0")
+                    .optFilter("dataset", "voc")
+                    .optFilter("size", "512")
+                    .optEngine("MXNet")
+                    .build();
+        }
         // Yolo from MXNet engine
         // Available models :
         // dataset: "voc", "coco"
         // backbone: "darknet53", "mobilenet1.0"
-        else if (modelNameOrURL.equals("yolo")) {
+        else if (modelNameOrURL.equals("voc_yolo")) {
             this.criteria = Criteria.builder()
                     .optApplication(Application.CV.OBJECT_DETECTION)
                     .setTypes(Image.class, DetectedObjects.class)
-                    .optFilter("backbone", "darknet53")
+                    .optFilter("backbone", "mobilenet1.0")
+                    .optFilter("dataset", "voc")
+                    .optEngine("MXNet")
+                    .build();
+        }
+        else if (modelNameOrURL.equals("coco_yolo")) {
+            this.criteria = Criteria.builder()
+                    .optApplication(Application.CV.OBJECT_DETECTION)
+                    .setTypes(Image.class, DetectedObjects.class)
+                    .optFilter("backbone", "mobilenet1.0")
                     .optFilter("dataset", "coco")
                     .optEngine("MXNet")
                     .build();
@@ -122,6 +139,18 @@ public class ObjectDetector {
                     .optEngine("TensorFlow")
                     .build();
         }
+
+        ZooModel<Image, DetectedObjects> model = null;
+        try {
+            model = this.criteria.loadModel();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (ModelNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (MalformedModelException e) {
+            throw new RuntimeException(e);
+        }
+        this.predictor = model.newPredictor();
 
         logger.info("successfully loaded!");
     }
@@ -153,12 +182,15 @@ public class ObjectDetector {
         return objectList;
     }
 
+    // Experimental WIP function
+    // To implement a custom saveBoundingBoxImage function instead of passing it as an option
+    // to use DJL native function in .detect()
     /**
      * Convert objects in MLObject[] to DetectedObjects
      * @param objectList, originalImgWidth, originalImgHeight
      * @return MLObject[]
      */
-    private DetectedObjects DetectedObjectsToMLObjects(MLObject[] objectList, int originalImgWidth, int originalImgHeight) {
+    private DetectedObjects MLObjectsToDetectedObjects(MLObject[] objectList, int originalImgWidth, int originalImgHeight) {
         int numObjects = objectList.length;
         List<String> classNames = new ArrayList<>();
         List<Double> probabilities = new ArrayList<>();
@@ -167,12 +199,33 @@ public class ObjectDetector {
             MLObject object = objectList[i];
             classNames.add(object.getLabel());
             probabilities.add((double) object.getConfidence());
-//            boundingBoxes.add()
+            // To do : add each bounding boxes
+            // boundingBoxes.add()
         }
         DetectedObjects objects = new DetectedObjects(classNames, probabilities, boundingBoxes);
         return objects;
     }
     // --------------------------------------------------
+
+    public MLObject[] detectPreloaded(PImage pImg) {
+        // get original image size
+        int originalImgWidth = pImg.width;
+        int originalImgHeight = pImg.height;
+        // convert PImage to DJL Image
+        BufferedImage buffImg = ProcessingUtils.PImageToBuffImage(pImg);
+        Image img = ImageFactory.getInstance().fromImage(buffImg);
+
+        // detect objects
+        DetectedObjects objects = null;
+        try {
+            objects = this.predictor.predict(img);
+        } catch (TranslateException e) {
+            throw new RuntimeException(e);
+        }
+        // parse DetectedObjects to a list of MLObject
+        MLObject[] objectList = DetectedObjectsToMLObjects(objects, originalImgWidth, originalImgHeight);
+        return objectList;
+    }
 
     /**
      * Run object detection on given PImage
@@ -204,6 +257,7 @@ public class ObjectDetector {
             throw new RuntimeException(e);
         }
     }
+
     /**
      * Run object detection on given PImage and save output image
      * @param pImg, saveOutputImg, fileName
@@ -237,6 +291,37 @@ public class ObjectDetector {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public DetectedObjects detectDJL(PImage pImg) {
+        // convert PImage to DJL Image
+        BufferedImage buffImg = ProcessingUtils.PImageToBuffImage(pImg);
+        Image img = ImageFactory.getInstance().fromImage(buffImg);
+
+        try (ZooModel<Image, DetectedObjects> model = criteria.loadModel()) {
+            try (Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
+                // detect objects
+                DetectedObjects detected = predictor.predict(img);
+                return detected;
+            } catch (TranslateException e) {
+                throw new RuntimeException(e);
+            }
+        } catch (ModelNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (MalformedModelException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void drawBoundingBoxes(PImage pImg, DetectedObjects detectedObjects) {
+        // convert PImage to DJL Image
+        BufferedImage buffImg = ProcessingUtils.PImageToBuffImage(pImg);
+        Image img = ImageFactory.getInstance().fromImage(buffImg);
+
+        img.drawBoundingBoxes(detectedObjects);
+//        img.save();
     }
 
 //    public void saveBoundingBoxImage(PImage pImg, MLObject[] objectList, String fileName) {
