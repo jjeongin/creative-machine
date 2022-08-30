@@ -40,8 +40,10 @@ import static processing.core.PConstants.RGB;
 public class FaceDetector {
     PApplet parent; // reference to the parent sketch
 
-    private Criteria<Image, DetectedObjects> criteria; // default 5 landmark model
-    private Criteria<Image, MLKeyPoint[]> landmarkCriteria; // 68 landmark model
+//    private Criteria<Image, DetectedObjects> criteria; // default 5 landmark model
+//    private Criteria<Image, MLKeyPoint[]> landmarkCriteria; // 68 landmark model
+    private Predictor<Image, DetectedObjects> predictor; // default 5 landmark model
+    private Predictor<Image, MLKeyPoint[]> landmarkPredictor; // 68 landmark model
     private boolean landmarks68;
 
     private static final Logger logger =
@@ -65,24 +67,46 @@ public class FaceDetector {
 
         // default 5 landmarks model
         String modelNameOrURL = "https://www.dropbox.com/s/b9rvq4cz4tniw5e/retinaface-mobilenet.zip?dl=1";
-        this.criteria = Criteria.builder()
+        Criteria<Image, DetectedObjects> criteria = Criteria.builder()
                 .setTypes(Image.class, DetectedObjects.class)
                 .optModelUrls(modelNameOrURL)
                 .optModelName(ProcessingUtils.getFileNameFromPath(modelNameOrURL)+"/saved_model")
                 .optTranslator(translator)
                 .optEngine("TensorFlow") // Use TensorFlow engine
                 .build();
+        ZooModel<Image, DetectedObjects> model = null;
+        try {
+            model = criteria.loadModel();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (ModelNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (MalformedModelException e) {
+            throw new RuntimeException(e);
+        }
+        this.predictor = model.newPredictor();
 
         if (this.landmarks68 == true) { // 68 landmarks
             String landmarkModelNameOrURL = "https://www.dropbox.com/s/fwfwwlrl7uqk6ey/retinaface-mobilenet-68landmarks.zip?dl=1";
             FaceLandmarkTranslator landmarkTranslator = new FaceLandmarkTranslator();
-            this.landmarkCriteria = Criteria.builder()
+            Criteria<Image, MLKeyPoint[]> landmarkCriteria = Criteria.builder()
                     .setTypes(Image.class, MLKeyPoint[].class)
                     .optModelUrls(landmarkModelNameOrURL)
                     .optModelName(ProcessingUtils.getFileNameFromPath(landmarkModelNameOrURL)+"/saved_model")
                     .optTranslator(landmarkTranslator)
                     .optEngine("TensorFlow") // Use TensorFlow engine
                     .build();
+            ZooModel<Image, MLKeyPoint[]> landmarkModel = null;
+            try {
+                landmarkModel = landmarkCriteria.loadModel();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (ModelNotFoundException e) {
+                throw new RuntimeException(e);
+            } catch (MalformedModelException e) {
+                throw new RuntimeException(e);
+            }
+            this.landmarkPredictor = landmarkModel.newPredictor();
         }
 
         logger.info("successfully loaded!");
@@ -133,52 +157,40 @@ public class FaceDetector {
     private MLFace[] detect68Landmarks(Image img, DetectedObjects detected, int orgImgW, int orgImgH) {
         int biggerDimension = Math.max(orgImgW, orgImgH);
         // retrieve cropped face images from resized img using bounding boxes in DetectedObjects
-        try (ZooModel<Image, MLKeyPoint[]> model = landmarkCriteria.loadModel()) {
-            try (Predictor<Image, MLKeyPoint[]> predictor = model.newPredictor()) {
-                int numObjects = detected.getNumberOfObjects();
-                MLFace[] faces = new MLFace[numObjects];
-                for (int i = 0; i < numObjects; i++) {
-                    // get the ith detected object
-                    DetectedObjects.DetectedObject d = detected.item(i);
-                    // retrieve information from a detected object
-                    String className = d.getClassName(); // get class name
-                    float probability = (float) d.getProbability(); // get probability
-                    Rectangle bound = d.getBoundingBox().getBounds(); // get bounding box
+        int numObjects = detected.getNumberOfObjects();
+        MLFace[] faces = new MLFace[numObjects];
+        for (int i = 0; i < numObjects; i++) {
+            // get the ith detected object
+            DetectedObjects.DetectedObject d = detected.item(i);
+            // retrieve information from a detected object
+            String className = d.getClassName(); // get class name
+            float probability = (float) d.getProbability(); // get probability
+            Rectangle bound = d.getBoundingBox().getBounds(); // get bounding box
 
-                    float x = (float) bound.getX() * biggerDimension;
-                    float y = (float) bound.getY() * biggerDimension;
-                    //  PVector upperLeft = new PVector((float) bound.getX(), (float) bound.getY()); // get upper left corner of the bounding box
-                    float width = (float) bound.getWidth() * biggerDimension; // get width of the bounding box
-                    float height = (float) bound.getHeight() * biggerDimension; // get height of the bounding box
+            float x = (float) bound.getX() * biggerDimension;
+            float y = (float) bound.getY() * biggerDimension;
+            //  PVector upperLeft = new PVector((float) bound.getX(), (float) bound.getY()); // get upper left corner of the bounding box
+            float width = (float) bound.getWidth() * biggerDimension; // get width of the bounding box
+            float height = (float) bound.getHeight() * biggerDimension; // get height of the bounding box
 
-                    // crop a face from img using d's bounding box
-                    System.out.println(img.getWidth() + " | " + img.getHeight());
+            // crop a face from img using d's bounding box
+            System.out.println(img.getWidth() + " | " + img.getHeight());
 //                    System.out.println(bound.getX()*640 + " " + (int) bound.getY()*640 + " " + (int) bound.getWidth()*640 + " " + (int) bound.getHeight()*640);
 
-                    Image croppedFace = img.getSubImage((int) (bound.getX()*640), (int) (bound.getY()*640), (int) (bound.getWidth()*640), (int) (bound.getHeight()*640));
+            Image croppedFace = img.getSubImage((int) (bound.getX()*640), (int) (bound.getY()*640), (int) (bound.getWidth()*640), (int) (bound.getHeight()*640));
 
-                    // convert landmark points
-                    List<PVector> landmarks = new ArrayList<>(); // create new landmark list
-                    MLKeyPoint[] landmarkPoints = predictor.predict(croppedFace);
-                    for (MLKeyPoint p : landmarkPoints) {
-                        PVector l = new PVector((float) p.getX()/640*biggerDimension, (float) p.getY()/640*biggerDimension);
-                        landmarks.add(l); // add each element in the array
-                    }
-
-                    // add each object to the list as MLFace
-                    faces[i] = new MLFace(className, probability, x, y, width, height, landmarks);
-                }
-                return faces;
-            } catch (TranslateException e) {
-                throw new RuntimeException(e);
+            // convert landmark points
+            List<PVector> landmarks = new ArrayList<>(); // create new landmark list
+            MLKeyPoint[] landmarkPoints = predictor.predict(croppedFace);
+            for (MLKeyPoint p : landmarkPoints) {
+                PVector l = new PVector((float) p.getX()/640*biggerDimension, (float) p.getY()/640*biggerDimension);
+                landmarks.add(l); // add each element in the array
             }
-        } catch (ModelNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (MalformedModelException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+
+            // add each object to the list as MLFace
+            faces[i] = new MLFace(className, probability, x, y, width, height, landmarks);
         }
+        return faces;
     }
 
     public MLFace[] detect(PImage pImg) {
@@ -188,29 +200,22 @@ public class FaceDetector {
         BufferedImage buffImg = ProcessingUtils.PImageToBuffImage(squareImg);
         Image img = ImageFactory.getInstance().fromImage(buffImg);
         // detect faces
-        try (ZooModel<Image, DetectedObjects> model = criteria.loadModel()) {
-            try (Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
-                // detect basic faces with confidence, bounding box, and 5 landmarks
-                DetectedObjects detected = predictor.predict(img);
-                // detect extra 68 landmarks if landmarks68 is true
-                MLFace[] detectedList;
-                if (this.landmarks68 == true) {
-                    detectedList = detect68Landmarks(img, detected, pImg.width, pImg.height);
-                }
-                else { // if only 5 landmarks
-                    // parse DetectedObjects to a list of MLFace
-                    detectedList = parseDetectedObjects(detected, pImg.width, pImg.height);
-                }
-                return detectedList;
-            } catch (TranslateException e) {
-                throw new RuntimeException(e);
-            }
-        } catch (ModelNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (MalformedModelException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
+        // detect basic faces with confidence, bounding box, and 5 landmarks
+        DetectedObjects detected = null;
+        try {
+            detected = this.predictor.predict(img);
+        } catch (TranslateException e) {
             throw new RuntimeException(e);
         }
+        // detect extra 68 landmarks if landmarks68 is true
+        MLFace[] detectedList;
+        if (this.landmarks68 == true) {
+            detectedList = detect68Landmarks(img, detected, pImg.width, pImg.height);
+        }
+        else { // if only 5 landmarks
+            // parse DetectedObjects to a list of MLFace
+            detectedList = parseDetectedObjects(detected, pImg.width, pImg.height);
+        }
+        return detectedList;
     }
 }

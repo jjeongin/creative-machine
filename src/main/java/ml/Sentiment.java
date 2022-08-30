@@ -13,6 +13,9 @@ import org.slf4j.LoggerFactory;
 import processing.core.PApplet;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.List;
 
 import ml.translator.SentimentTranslator;
@@ -21,9 +24,7 @@ import ml.util.ProcessingUtils;
 
 public class Sentiment {
     PApplet parent; // reference to the parent sketch
-
-    private Criteria<String, Classifications> criteria; // model
-
+    private Predictor<String, Classifications> predictor;
     private static final Logger logger =
             LoggerFactory.getLogger(Sentiment.class);
 
@@ -34,8 +35,23 @@ public class Sentiment {
         if (modelNameOrURL.equals("distilbert")) {
             modelNameOrURL = "https://www.dropbox.com/s/j8hkvqqm4a9awcy/distilbert-sst2.zip?dl=1";
         }
+        else { // load model with remote url
+            // check if the URL is valid (source: https://stackoverflow.com/questions/2230676/how-to-check-for-a-valid-url-in-java)
+            URL url = null; // check for the URL protocol
+            try {
+                url = new URL(modelNameOrURL);
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
+            try {
+                url.toURI(); // extra check if the URI is valid
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
+            modelNameOrURL = String.valueOf(url);
+        }
 
-        this.criteria =
+        Criteria<String, Classifications> criteria =
                 Criteria.builder()
                         .optApplication(Application.NLP.SENTIMENT_ANALYSIS)
                         .setTypes(String.class, Classifications.class)
@@ -44,6 +60,18 @@ public class Sentiment {
                         .optTranslator(new SentimentTranslator())
                         .optEngine("TensorFlow")
                         .build();
+
+        ZooModel<String, Classifications> model = null;
+        try {
+            model = criteria.loadModel();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (ModelNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (MalformedModelException e) {
+            throw new RuntimeException(e);
+        }
+        this.predictor = model.newPredictor();
 
         logger.info("successfully loaded!");
     }
@@ -62,22 +90,16 @@ public class Sentiment {
     }
 
     public MLObject[] predict(String input) {
-        try (ZooModel<String, Classifications> model = this.criteria.loadModel()) {
-            Predictor<String, Classifications> predictor = model.newPredictor();
-            // run sentiment analysis
-            Classifications classified = predictor.predict(input);
-            // parse Classifications to a list of MLObject
-            MLObject[] results = ClassificationsToMLObjects(classified);
-            return results;
-        } catch (ModelNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (MalformedModelException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        // run sentiment analysis
+        Classifications classified = null;
+        try {
+            classified = this.predictor.predict(input);
         } catch (TranslateException e) {
             throw new RuntimeException(e);
         }
+        // parse Classifications to a list of MLObject
+        MLObject[] results = ClassificationsToMLObjects(classified);
+        return results;
     }
 }
 

@@ -35,7 +35,7 @@ import ml.MLKeyPoint;
 
 public class PoseNet {
     PApplet parent; // reference to the parent sketch
-    private Criteria<Image, Joints> criteria; // model
+    private Predictor<Image, Joints> predictor;
 
     private static final Logger logger =
             LoggerFactory.getLogger(PoseNet.class);
@@ -44,8 +44,9 @@ public class PoseNet {
         this.parent = myParent;
         logger.info("model loading..");
 
+        Criteria<Image, Joints> criteria = null;
         if (modelNameOrURL.equals("ResNet")) {
-            this.criteria = Criteria.builder()
+            criteria = Criteria.builder()
                     .optApplication(Application.CV.POSE_ESTIMATION)
                     .setTypes(Image.class, Joints.class)
                     .optFilter("backbone", "resnet18")
@@ -54,6 +55,18 @@ public class PoseNet {
                     .optEngine("MXNet")
                     .build();
         }
+
+        ZooModel<Image, Joints> pose = null;
+        try {
+            pose = criteria.loadModel();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (ModelNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (MalformedModelException e) {
+            throw new RuntimeException(e);
+        }
+        this.predictor = pose.newPredictor();
 
         logger.info("successfully loaded!");
     }
@@ -83,30 +96,25 @@ public class PoseNet {
     public MLPose predict(PImage pImg) {
         BufferedImage buffImg = ProcessingUtils.PImageToBuffImage(pImg);
         Image img = ImageFactory.getInstance().fromImage(buffImg);
-
         // find a person in image using object detection
         int width = img.getWidth();
         int height = img.getHeight();
         Rectangle personRect = predictPersonInImage(img);
-
         // convert cropped rectangle to image
         float personTopLeftX = (float) personRect.getX() * width;
         float personTopLeftY = (float) personRect.getY() * height;
         float personWidth = (float) (personRect.getWidth() * width);
         float personHeight = (float) (personRect.getHeight() * height);
-
         Image personImg = img.getSubImage(
                         (int) (personTopLeftX),
                         (int) (personTopLeftY),
                         (int) (personWidth),
                         (int) (personHeight));
-
         // throw error if person is not found
         if (personImg == null) {
             logger.warn("No person found in image.");
             return new MLPose(Collections.emptyList());
         }
-
         // detect pose on the person image
         Joints joints = predictJointsInPerson(personImg);
         MLPose pose = parseJoints(joints, personTopLeftX, personTopLeftY, personWidth, personHeight);
@@ -155,21 +163,13 @@ public class PoseNet {
 
     private Joints predictJointsInPerson(Image person) {
         // find joints from the person image
-        try (ZooModel<Image, Joints> pose = this.criteria.loadModel()) {
-            try (Predictor<Image, Joints> predictor = pose.newPredictor()) {
-                Joints joints = predictor.predict(person);
-//                saveJointsImage(person, joints);
-                return joints;
-            } catch (TranslateException e) {
-                throw new RuntimeException(e);
-            }
-        } catch (ModelNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (MalformedModelException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
+        Joints joints = null;
+        try {
+            joints = this.predictor.predict(person);
+        } catch (TranslateException e) {
             throw new RuntimeException(e);
         }
+        return joints;
     }
 
     private void saveJointsImage(Image img, Joints joints) {
@@ -193,5 +193,4 @@ public class PoseNet {
         }
         logger.info("Detected pose image has been saved in: {}", imagePath);
     }
-
 }

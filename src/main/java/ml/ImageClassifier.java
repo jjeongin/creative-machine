@@ -6,6 +6,7 @@ import ai.djl.inference.Predictor;
 import ai.djl.modality.Classifications;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
+import ai.djl.modality.cv.output.DetectedObjects;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
@@ -25,8 +26,7 @@ import ml.MLObject;
 
 public class ImageClassifier {
     PApplet parent; // reference to the parent sketch
-    private Criteria<Image, Classifications> criteria; // model
-
+    private Predictor<Image, Classifications> predictor;
     private static final Logger logger =
             LoggerFactory.getLogger(ImageClassifier.class);
 
@@ -34,8 +34,10 @@ public class ImageClassifier {
         this.parent = myParent;
         logger.info("model loading..");
 
+        // Select a model to use
+        Criteria<Image, Classifications> criteria = null;
         if (modelNameOrURL.equals("MobileNet")) {
-            this.criteria = Criteria.builder()
+            criteria = Criteria.builder()
                     .optApplication(Application.CV.IMAGE_CLASSIFICATION)
                     .setTypes(Image.class, Classifications.class)
                     .optFilter("flavor", "v3_small")
@@ -43,7 +45,7 @@ public class ImageClassifier {
                     .build();
         }
         else if (modelNameOrURL.equals("Darknet")) {
-            this.criteria = Criteria.builder()
+            criteria = Criteria.builder()
                     .optApplication(Application.CV.IMAGE_CLASSIFICATION)
                     .setTypes(Image.class, Classifications.class)
                     .optFilter("layers", "53") // can we use model name directly ??
@@ -51,6 +53,18 @@ public class ImageClassifier {
                     .optEngine("MXNet")
                     .build();
         }
+
+        ZooModel<Image, Classifications> model = null;
+        try {
+            model = criteria.loadModel();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (ModelNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (MalformedModelException e) {
+            throw new RuntimeException(e);
+        }
+        this.predictor = model.newPredictor();
 
         logger.info("successfully loaded!");
     }
@@ -72,25 +86,18 @@ public class ImageClassifier {
     }
 
     public MLObject[] classify(PImage pImg) {
+        // convert PImage to DJL Image
         BufferedImage buffImg = ProcessingUtils.PImageToBuffImage(pImg);
         Image img = ImageFactory.getInstance().fromImage(buffImg);
-
-        try (ZooModel<Image, Classifications> model = this.criteria.loadModel()) {
-            try (Predictor<Image, Classifications> predictor = model.newPredictor()) {
-                // classify objects
-                Classifications classified = predictor.predict(img);
-                // parse Classifications to a list of MLObject
-                MLObject[] results = ClassificationsToMLObjects(classified);
-                return results;
-            } catch (TranslateException e) {
-                throw new RuntimeException(e);
-            }
-        } catch (ModelNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (MalformedModelException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
+        // classify objects
+        Classifications classified = null;
+        try {
+            classified = this.predictor.predict(img);
+        } catch (TranslateException e) {
             throw new RuntimeException(e);
         }
+        //  parse Classifications to a list of MLObject
+        MLObject[] results = ClassificationsToMLObjects(classified);
+        return results;
     }
 }
