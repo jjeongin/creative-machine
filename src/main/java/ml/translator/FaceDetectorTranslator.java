@@ -111,11 +111,6 @@ public class FaceDetectorTranslator implements Translator<Image, DetectedObjects
         // get landmarks
         NDArray landms = list.get(0);
         landms = decodeLandm(landms, boxRecover, scaleXY); // decode 5 landmarks
-//            if (this.landmarks68 == true) {
-//                landms = decodeLandm68(landms, boxRecover, scaleXY); // decode 68 landmarks
-//            } else {
-//                landms = decodeLandm(landms, boxRecover, scaleXY); // decode 5 landmarks
-//            }
 
         // filter the result with the threshold
         NDArray cutOff = prob.get(1).gt(confThresh);

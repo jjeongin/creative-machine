@@ -39,9 +39,6 @@ import static processing.core.PConstants.RGB;
 
 public class FaceDetector {
     PApplet parent; // reference to the parent sketch
-
-//    private Criteria<Image, DetectedObjects> criteria; // default 5 landmark model
-//    private Criteria<Image, MLKeyPoint[]> landmarkCriteria; // 68 landmark model
     private Predictor<Image, DetectedObjects> predictor; // default 5 landmark model
     private Predictor<Image, MLKeyPoint[]> landmarkPredictor; // 68 landmark model
     private boolean landmarks68;
@@ -106,16 +103,18 @@ public class FaceDetector {
             } catch (MalformedModelException e) {
                 throw new RuntimeException(e);
             }
+            // TEST
+            DJLUtils.printInputOutputInfo(landmarkModel);
             this.landmarkPredictor = landmarkModel.newPredictor();
         }
 
         logger.info("successfully loaded!");
     }
 
-    private MLFace[] parseDetectedObjects(DetectedObjects detected, int orgImgW, int orgImgH) {
+    private MLFace[] DetectedObjectsToMLFaces(DetectedObjects detected, int orgImgW, int orgImgH) {
         int biggerDimension = Math.max(orgImgW, orgImgH);
         int numObjects = detected.getNumberOfObjects();
-        MLFace[] faces = new MLFace[numObjects];
+        MLFace[] faces = new MLFace[numObjects]; // initialize a new array
         for (int i = 0; i < numObjects; i++) {
             // get the ith detected object
             DetectedObjects.DetectedObject d = detected.item(i);
@@ -129,10 +128,10 @@ public class FaceDetector {
             float width = (float) bound.getWidth() * biggerDimension; // get width of the bounding box
             float height = (float) bound.getHeight() * biggerDimension; // get height of the bounding box
             // convert landmark points
-            List<PVector> landmarks = new ArrayList<>(); // create new landmark list
+            List<MLKeyPoint> landmarks = new ArrayList<>(); // create new landmark list
             Iterable<Point> landmarkPoints = d.getBoundingBox().getPath(); // get landmark points from Landmark object
             for (Point p : landmarkPoints) {
-                PVector l = new PVector((float) p.getX()/640*biggerDimension, (float) p.getY()/640*biggerDimension);
+                MLKeyPoint l = new MLKeyPoint((float) p.getX()/640*biggerDimension, (float) p.getY()/640*biggerDimension);
                 landmarks.add(l); // add each element in the array
             }
 
@@ -166,7 +165,6 @@ public class FaceDetector {
             String className = d.getClassName(); // get class name
             float probability = (float) d.getProbability(); // get probability
             Rectangle bound = d.getBoundingBox().getBounds(); // get bounding box
-
             float x = (float) bound.getX() * biggerDimension;
             float y = (float) bound.getY() * biggerDimension;
             //  PVector upperLeft = new PVector((float) bound.getX(), (float) bound.getY()); // get upper left corner of the bounding box
@@ -180,10 +178,15 @@ public class FaceDetector {
             Image croppedFace = img.getSubImage((int) (bound.getX()*640), (int) (bound.getY()*640), (int) (bound.getWidth()*640), (int) (bound.getHeight()*640));
 
             // convert landmark points
-            List<PVector> landmarks = new ArrayList<>(); // create new landmark list
-            MLKeyPoint[] landmarkPoints = predictor.predict(croppedFace);
+            List<MLKeyPoint> landmarks = new ArrayList<>(); // create new landmark list
+            MLKeyPoint[] landmarkPoints = new MLKeyPoint[0];
+            try {
+                landmarkPoints = this.landmarkPredictor.predict(croppedFace);
+            } catch (TranslateException e) {
+                throw new RuntimeException(e);
+            }
             for (MLKeyPoint p : landmarkPoints) {
-                PVector l = new PVector((float) p.getX()/640*biggerDimension, (float) p.getY()/640*biggerDimension);
+                MLKeyPoint l = new MLKeyPoint((float) p.getX()/640*biggerDimension, (float) p.getY()/640*biggerDimension);
                 landmarks.add(l); // add each element in the array
             }
 
@@ -208,13 +211,13 @@ public class FaceDetector {
             throw new RuntimeException(e);
         }
         // detect extra 68 landmarks if landmarks68 is true
-        MLFace[] detectedList;
+        MLFace[] detectedList = null;
         if (this.landmarks68 == true) {
-            detectedList = detect68Landmarks(img, detected, pImg.width, pImg.height);
+//            detectedList = detect68Landmarks(img, detected, pImg.width, pImg.height);
         }
         else { // if only 5 landmarks
             // parse DetectedObjects to a list of MLFace
-            detectedList = parseDetectedObjects(detected, pImg.width, pImg.height);
+            detectedList = DetectedObjectsToMLFaces(detected, pImg.width, pImg.height);
         }
         return detectedList;
     }
