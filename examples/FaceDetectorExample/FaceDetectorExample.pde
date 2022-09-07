@@ -8,7 +8,7 @@ void setup() {
     size(1600, 898);
     background(255);
 
-    // load model
+    // load face detector model
     detector = new FaceDetector(this);
 
     // load image
@@ -32,8 +32,8 @@ void draw() {
         noStroke();
         fill(255, 131, 110);
         for (int j = 0; j < face.getLandmarks().size(); j++) {
-            PVector landmark = face.getLandmarks().get(j);
-            circle(landmark.x, landmark.y, 5);
+            MLKeyPoint landmark = face.getLandmarks().get(j);
+            circle(landmark.getX(), landmark.getY(), 5);
         }
     }
 }

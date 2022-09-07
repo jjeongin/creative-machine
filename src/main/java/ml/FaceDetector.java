@@ -41,16 +41,16 @@ public class FaceDetector {
     PApplet parent; // reference to the parent sketch
     private Predictor<Image, DetectedObjects> predictor; // default 5 landmark model
     private Predictor<Image, MLKeyPoint[]> landmarkPredictor; // 68 landmark model
-    private boolean landmarks68;
+    private boolean detectLandmarksOrNot; // if true, detect 68 landmarks
 
     private static final Logger logger =
             LoggerFactory.getLogger(FaceDetector.class);
-
-    public FaceDetector(PApplet myParent, Boolean landmarks68) {
+    /**
+    Default Constructor
+     */
+    public FaceDetector(PApplet myParent) {
         this.parent = myParent;
         logger.info("model loading..");
-
-        this.landmarks68 = landmarks68;
 
         // default config
         double confThresh = 0.85f;
@@ -60,9 +60,54 @@ public class FaceDetector {
         int[][] scales = {{16, 32}, {64, 128}, {256, 512}};
         int[] steps = {8, 16, 32}; // strides
         FaceDetectorTranslator translator =
-                new FaceDetectorTranslator(confThresh, nmsThresh, variance, topK, scales, steps, landmarks68);
+                new FaceDetectorTranslator(confThresh, nmsThresh, variance, topK, scales, steps);
 
         // default 5 landmarks model
+        String modelNameOrURL = "https://www.dropbox.com/s/b9rvq4cz4tniw5e/retinaface-mobilenet.zip?dl=1";
+        Criteria<Image, DetectedObjects> criteria = Criteria.builder()
+                .setTypes(Image.class, DetectedObjects.class)
+                .optModelUrls(modelNameOrURL)
+                .optModelName(ProcessingUtils.getFileNameFromPath(modelNameOrURL)+"/saved_model")
+                .optTranslator(translator)
+                .optEngine("TensorFlow") // Use TensorFlow engine
+                .build();
+        ZooModel<Image, DetectedObjects> model = null;
+        try {
+            model = criteria.loadModel(); // load model with criteria
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (ModelNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (MalformedModelException e) {
+            throw new RuntimeException(e);
+        }
+        this.predictor = model.newPredictor(); // initialize predictor for the model
+
+        logger.info("successfully loaded!");
+    }
+
+    /**
+     * Constructor with an optional argument to detect 68 face landmarks
+     * @param detectLandmarksOrNot Detect 68 landmarks if true
+     */
+    public FaceDetector(PApplet myParent, Boolean detectLandmarksOrNot) {
+        this.parent = myParent;
+        logger.info("model loading..");
+
+        // store the boolean value
+        this.detectLandmarksOrNot = detectLandmarksOrNot;
+
+        // default config
+        double confThresh = 0.85f;
+        double nmsThresh = 0.45f;
+        double[] variance = {0.1f, 0.2f};
+        int topK = 5000;
+        int[][] scales = {{16, 32}, {64, 128}, {256, 512}};
+        int[] steps = {8, 16, 32}; // strides
+        FaceDetectorTranslator translator =
+                new FaceDetectorTranslator(confThresh, nmsThresh, variance, topK, scales, steps);
+
+        // load default face detection model that identifies 5 landmarks
         String modelNameOrURL = "https://www.dropbox.com/s/b9rvq4cz4tniw5e/retinaface-mobilenet.zip?dl=1";
         Criteria<Image, DetectedObjects> criteria = Criteria.builder()
                 .setTypes(Image.class, DetectedObjects.class)
@@ -82,8 +127,9 @@ public class FaceDetector {
             throw new RuntimeException(e);
         }
         this.predictor = model.newPredictor();
-
-        if (this.landmarks68 == true) { // 68 landmarks
+        // WIP
+        // load landmark detection model that identifies 68 landmarks
+        if (this.detectLandmarksOrNot == true) { // 68 landmarks
             String landmarkModelNameOrURL = "https://www.dropbox.com/s/fwfwwlrl7uqk6ey/retinaface-mobilenet-68landmarks.zip?dl=1";
             FaceLandmarkTranslator landmarkTranslator = new FaceLandmarkTranslator();
             Criteria<Image, MLKeyPoint[]> landmarkCriteria = Criteria.builder()
@@ -103,11 +149,9 @@ public class FaceDetector {
             } catch (MalformedModelException e) {
                 throw new RuntimeException(e);
             }
-            // TEST
-            DJLUtils.printInputOutputInfo(landmarkModel);
+            DJLUtils.printInputOutputInfo(landmarkModel); // TEST
             this.landmarkPredictor = landmarkModel.newPredictor();
         }
-
         logger.info("successfully loaded!");
     }
 
@@ -134,7 +178,6 @@ public class FaceDetector {
                 MLKeyPoint l = new MLKeyPoint((float) p.getX()/640*biggerDimension, (float) p.getY()/640*biggerDimension);
                 landmarks.add(l); // add each element in the array
             }
-
             // add each object to the list as MLFace
             faces[i] = new MLFace(className, probability, x, y, width, height, landmarks);
         }
@@ -202,23 +245,26 @@ public class FaceDetector {
         // convert PImage to Image
         BufferedImage buffImg = ProcessingUtils.PImageToBuffImage(squareImg);
         Image img = ImageFactory.getInstance().fromImage(buffImg);
-        // detect faces
-        // detect basic faces with confidence, bounding box, and 5 landmarks
+        // detect faces with confidence, bounding box, and 5 landmarks
         DetectedObjects detected = null;
         try {
             detected = this.predictor.predict(img);
         } catch (TranslateException e) {
             throw new RuntimeException(e);
         }
-        // detect extra 68 landmarks if landmarks68 is true
+
         MLFace[] detectedList = null;
-        if (this.landmarks68 == true) {
+        if (detected != null) {
+            // detect extra 68 landmarks if detectLandmarksOrNot is true
+            if (this.detectLandmarksOrNot == true) {
 //            detectedList = detect68Landmarks(img, detected, pImg.width, pImg.height);
+            }
+            else { // if only 5 landmarks
+                // parse DetectedObjects to a list of MLFace
+                detectedList = DetectedObjectsToMLFaces(detected, pImg.width, pImg.height);
+            }
         }
-        else { // if only 5 landmarks
-            // parse DetectedObjects to a list of MLFace
-            detectedList = DetectedObjectsToMLFaces(detected, pImg.width, pImg.height);
-        }
+
         return detectedList;
     }
 }

@@ -32,7 +32,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import static ai.djl.modality.cv.util.NDImageUtils.resize;
 
 public class FaceDetectorTranslator implements Translator<Image, DetectedObjects> {
-
     private double confThresh;
     private double nmsThresh;
     private int topK;
@@ -41,24 +40,19 @@ public class FaceDetectorTranslator implements Translator<Image, DetectedObjects
     private int[] steps;
     private int width;
     private int height;
-    private boolean landmarks68;
-
-
     public FaceDetectorTranslator(
             double confThresh,
             double nmsThresh,
             double[] variance,
             int topK,
             int[][] scales,
-            int[] steps,
-            boolean landmarks68) {
+            int[] steps) {
         this.confThresh = confThresh;
         this.nmsThresh = nmsThresh;
         this.variance = variance;
         this.topK = topK;
         this.scales = scales;
         this.steps = steps;
-        this.landmarks68 = landmarks68;
     }
 
     @Override
@@ -145,22 +139,15 @@ public class FaceDetectorTranslator implements Translator<Image, DetectedObjects
             }
             if (belowIoU) {
                 List<Point> keyPoints = new ArrayList<>(); // list of landmarks
-
-                // Only add 5 landmarks if the landmarks68 is false
-                // if landmarks68 is true, an empty list of keyPoints will be passed
-                if (!this.landmarks68) {
-                    // add each landmark coordinate into keyPoints
-                    for (int j = 0; j < landms.size(1) / 2; j++) { // 5 face landmarks
-                        float x = landmsArr[j * 2];
-                        float y = landmsArr[j * 2 + 1];
-                        keyPoints.add(new Point(x * width, y * height));
-                    }
+                // add each landmark coordinate into keyPoints
+                for (int j = 0; j < landms.size(1) / 2; j++) { // 5 face landmarks
+                    float x = landmsArr[j * 2];
+                    float y = landmsArr[j * 2 + 1];
+                    keyPoints.add(new Point(x * width, y * height));
                 }
-
                 // four points of a bounding box and the list of all the landmarks
                 Landmark landmark =
                         new Landmark(boxArr[0], boxArr[1], boxArr[2], boxArr[3], keyPoints);
-
                 boxes.add(landmark);
                 recorder.put(classId, boxes);
                 String className = "Face";
@@ -169,7 +156,6 @@ public class FaceDetectorTranslator implements Translator<Image, DetectedObjects
                 retBB.add(landmark);
             }
         }
-
         return new DetectedObjects(retNames, retProbs, retBB);
     }
 
@@ -182,8 +168,8 @@ public class FaceDetectorTranslator implements Translator<Image, DetectedObjects
             aspectRatio[i] = new int[] {hRatio, wRatio};
         }
 
-        // Changed double -> float list for defaultBoxes
-        // since using double causes a type-mismatch error when TFNDArray runs clip(0, 1);
+        // Changed defaultBoxes from double to float list
+        // because using double caused a type-mismatch error when TFNDArray runs clip(0, 1);
         List<float[]> defaultBoxes = new ArrayList<>();
         for (int idx = 0; idx < steps.length; idx++) {
             int[] scale = scales[idx]; // for each scale, {{16, 32}, {64, 128}, {256, 512}}
@@ -199,7 +185,6 @@ public class FaceDetectorTranslator implements Translator<Image, DetectedObjects
                 }
             }
         }
-
         float[][] boxes = new float[defaultBoxes.size()][defaultBoxes.get(0).length];
         for (int i = 0; i < defaultBoxes.size(); i++) {
             boxes[i] = defaultBoxes.get(i);
@@ -221,29 +206,4 @@ public class FaceDetectorTranslator implements Translator<Image, DetectedObjects
                 pre.get(":, 8:10").mul(scaleXY).mul(priors.get(":, 2:")).add(priors.get(":, :2"));
         return NDArrays.concat(new NDList(point1, point2, point3, point4, point5), 1);
     }
-
-//    // decode face landmarks, 68 points per face
-//    private NDArray decodeLandm68(NDArray pre, NDArray priors, double scaleXY) {
-//        NDArray point1 =
-//                pre.get(":, :2").mul(scaleXY).mul(priors.get(":, 2:")).add(priors.get(":, :2"));
-//        NDArray point2 =
-//                pre.get(":, 2:4").mul(scaleXY).mul(priors.get(":, 2:")).add(priors.get(":, :2"));
-//        NDArray point3 =
-//                pre.get(":, 4:6").mul(scaleXY).mul(priors.get(":, 2:")).add(priors.get(":, :2"));
-//        NDArray point4 =
-//                pre.get(":, 6:8").mul(scaleXY).mul(priors.get(":, 2:")).add(priors.get(":, :2"));
-//        NDArray point5 =
-//                pre.get(":, 8:10").mul(scaleXY).mul(priors.get(":, 2:")).add(priors.get(":, :2"));
-//
-//        System.out.println(pre.getShape());
-//
-//        NDArray point6 =
-//                pre.get(":, 10:12").mul(scaleXY).mul(priors.get(":, 2:")).add(priors.get(":, :2"));
-//        NDArray point7 =
-//                pre.get(":, 12:14").mul(scaleXY).mul(priors.get(":, 2:")).add(priors.get(":, :2"));
-//        NDArray point8 =
-//                pre.get(":, 14:16").mul(scaleXY).mul(priors.get(":, 2:")).add(priors.get(":, :2"));
-//
-//        return NDArrays.concat(new NDList(point1, point2, point3, point4, point5, point6, point7, point8), 1);
-//    }
 }
