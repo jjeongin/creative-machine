@@ -19,7 +19,7 @@ import java.net.URL;
 import java.util.List;
 
 import ml.translator.SentimentTranslator;
-import ml.MLObject;
+import ml.MLLabel;
 import ml.util.ProcessingUtils;
 
 public class Sentiment {
@@ -76,20 +76,20 @@ public class Sentiment {
         logger.info("successfully loaded!");
     }
 
-    private MLObject[] ClassificationsToMLObjects(Classifications classified) {
+    private MLLabel[] ClassificationsToMLLabels(Classifications classified) {
         List<Classifications.Classification> classifications = classified.items();
-        MLObject[] objectList = new MLObject[2]; // [Negative, Positive]
+        MLLabel[] labels = new MLLabel[2]; // [Negative, Positive]
         for (int i = 0; i < 2; i++) {
             // retrieve information from a classified object
             String labelName = classifications.get(i).getClassName(); // get class name
             float confidence = (float) classifications.get(i).getProbability(); // get probability
             // add each object to the list as MLObject
-            objectList[i] = new MLObject(labelName, confidence);
+            labels[i] = new MLLabel(labelName, confidence);
         }
-        return objectList;
+        return labels;
     }
 
-    public MLObject[] predict(String input) {
+    public MLLabel[] predict(String input) {
         // run sentiment analysis
         Classifications classified = null;
         try {
@@ -98,7 +98,7 @@ public class Sentiment {
             throw new RuntimeException(e);
         }
         // parse Classifications to a list of MLObject
-        MLObject[] results = ClassificationsToMLObjects(classified);
+        MLLabel[] results = ClassificationsToMLLabels(classified);
         return results;
     }
 }

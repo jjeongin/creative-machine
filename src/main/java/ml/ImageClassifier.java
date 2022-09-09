@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.util.List;
 
 import ml.util.ProcessingUtils;
-import ml.MLObject;
+import ml.MLLabel;
 
 public class ImageClassifier {
     PApplet parent; // reference to the parent sketch
@@ -69,10 +69,10 @@ public class ImageClassifier {
         logger.info("successfully loaded!");
     }
 
-    private MLObject[] ClassificationsToMLObjects(Classifications classified) {
+    private MLLabel[] ClassificationsToMLLabels(Classifications classified) {
         List<Classifications.Classification> topKClassifications = classified.topK();
         int numObjects = topKClassifications.size(); // default K is 5
-        MLObject[] objectList = new MLObject[numObjects];
+        MLLabel[] labels = new MLLabel[numObjects];
         for (int i = 0; i < numObjects; i++) {
             // retrieve information from a classified object
             String labelName = topKClassifications.get(i).getClassName(); // get class name
@@ -80,12 +80,12 @@ public class ImageClassifier {
             labelName = labelName.replace(labelId + " ", "");
             float confidence = (float) topKClassifications.get(i).getProbability(); // get probability
             // add each object to the list as MLObject
-            objectList[i] = new MLObject(labelName, confidence);
+            labels[i] = new MLLabel(labelName, confidence);
         }
-        return objectList;
+        return labels;
     }
 
-    public MLObject[] classify(PImage pImg) {
+    public MLLabel[] classify(PImage pImg) {
         // convert PImage to DJL Image
         BufferedImage buffImg = ProcessingUtils.PImageToBuffImage(pImg);
         Image img = ImageFactory.getInstance().fromImage(buffImg);
@@ -97,7 +97,7 @@ public class ImageClassifier {
             throw new RuntimeException(e);
         }
         //  parse Classifications to a list of MLObject
-        MLObject[] results = ClassificationsToMLObjects(classified);
+        MLLabel[] results = ClassificationsToMLLabels(classified);
         return results;
     }
 }
