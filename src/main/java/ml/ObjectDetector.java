@@ -51,38 +51,32 @@ public class ObjectDetector {
      * @param modelNameOrURL : model name to load (choose from object detection models in tf model zoo)
      *                         if not in the model zoo, try to load as URL
      */
-    public ObjectDetector(PApplet myParent, String modelNameOrURL) {
+    public ObjectDetector(PApplet myParent, String modelName) {
         this.parent = myParent;
         logger.info("model loading..");
 
         // Select a model to use
         Criteria<Image, DetectedObjects> criteria; // criteria for selecting the model
         // Open SSD from TensorFlow engine
-        // Available models : ssd {"backbone":"mobilenet_v2","dataset":"openimages_v4"}
-        if (modelNameOrURL.equals("openimages_ssd")) {
+        if (modelName.equals("openimages_ssd")) {
             criteria = Criteria.builder()
                     .optApplication(Application.CV.OBJECT_DETECTION)
                     .setTypes(Image.class, DetectedObjects.class)
-                    .optFilter("backbone", "mobilenet_v2")
+                    .optFilter("backbone", "mobilenet_v2")  // mobilenet has same accuracy as vgg while it is 32 times smaller than vgg
                     .optEngine("TensorFlow")
                     .build();
         }
         // Coco SSD from MXNet engine
-        // Available models :
-        // ssd_512_resnet50_v1_voc {"size":"512","backbone":"resnet50","flavor":"v1","dataset":"voc"}
-        // ssd_512_vgg16_atrous_coco {"size":"512","backbone":"vgg16","flavor":"atrous","dataset":"coco"}
-        // ssd_512_mobilenet1.0_voc {"size":"512","backbone":"mobilenet1.0","dataset":"voc"}
-        // ssd_300_vgg16_atrous_voc {"size":"300","backbone":"vgg16","flavor":"atrous","dataset":"voc"}
-        else if (modelNameOrURL.equals("coco_ssd")) {
+        else if (modelName.equals("coco_ssd")) {
             criteria = Criteria.builder()
                     .optApplication(Application.CV.OBJECT_DETECTION)
                     .setTypes(Image.class, DetectedObjects.class)
-                    .optFilter("backbone", "vgg16") // vgg has same accuracy as mobilenet while it is 32 times bigger than mobilenet
+                    .optFilter("backbone", "vgg16")
                     .optFilter("dataset", "coco")
                     .optEngine("MXNet")
                     .build();
         }
-        else if (modelNameOrURL.equals("voc_ssd")) {
+        else if (modelName.equals("voc_ssd")) {
             criteria = Criteria.builder()
                     .optApplication(Application.CV.OBJECT_DETECTION)
                     .setTypes(Image.class, DetectedObjects.class)
@@ -93,10 +87,7 @@ public class ObjectDetector {
                     .build();
         }
         // Yolo from MXNet engine
-        // Available models :
-        // dataset: "voc", "coco"
-        // backbone: "darknet53", "mobilenet1.0"
-        else if (modelNameOrURL.equals("voc_yolo")) {
+        else if (modelName.equals("voc_yolo")) {
             criteria = Criteria.builder()
                     .optApplication(Application.CV.OBJECT_DETECTION)
                     .setTypes(Image.class, DetectedObjects.class)
@@ -105,7 +96,7 @@ public class ObjectDetector {
                     .optEngine("MXNet")
                     .build();
         }
-        else if (modelNameOrURL.equals("coco_yolo")) {
+        else if (modelName.equals("coco_yolo")) {
             criteria = Criteria.builder()
                     .optApplication(Application.CV.OBJECT_DETECTION)
                     .setTypes(Image.class, DetectedObjects.class)
@@ -114,30 +105,31 @@ public class ObjectDetector {
                     .optEngine("MXNet")
                     .build();
         }
-        // if user passed remote URL or local path
         else {
-            // check if the URL is valid (source: https://stackoverflow.com/questions/2230676/how-to-check-for-a-valid-url-in-java)
-            URL url = null; // check for the URL protocol
-            try {
-                url = new URL(modelNameOrURL);
-            } catch (MalformedURLException e) {
-                throw new RuntimeException(e);
-            }
-            try {
-                url.toURI(); // extra check if the URI is valid
-            } catch (URISyntaxException e) {
-                throw new RuntimeException(e);
-            }
-
-            criteria = Criteria.builder()
-                    .optApplication(Application.CV.OBJECT_DETECTION)
-                    .setTypes(Image.class, DetectedObjects.class)
-                    .optModelUrls(String.valueOf(url))
-                    // saved_model.pb file is in the subfolder of the model archive file
-                    .optModelName(ProcessingUtils.getFileNameFromPath(modelNameOrURL)+"/saved_model")
-                    .optTranslator(new ObjectDetectorTranslator())
-                    .optEngine("TensorFlow")
-                    .build();
+            throw new IllegalArgumentException("No model named \'" + modelName + "\'. Check http://jjeongin.github.io/creative-machine/reference/object-detector for available model options.");
+            // load custom model with URL
+            // if user passed remote URL or local file path
+//            // check if the URL is valid (source: https://stackoverflow.com/questions/2230676/how-to-check-for-a-valid-url-in-java)
+//            URL url = null; // check for the URL protocol
+//            try {
+//                url = new URL(modelNameOrURL);
+//            } catch (MalformedURLException e) {
+//                throw new RuntimeException(e);
+//            }
+//            try {
+//                url.toURI(); // extra check if the URI is valid
+//            } catch (URISyntaxException e) {
+//                throw new RuntimeException(e);
+//            }
+//            criteria = Criteria.builder()
+//                    .optApplication(Application.CV.OBJECT_DETECTION)
+//                    .setTypes(Image.class, DetectedObjects.class)
+//                    .optModelUrls(String.valueOf(url))
+//                    // saved_model.pb file is in the subfolder of the model archive file
+//                    .optModelName(ProcessingUtils.getFileNameFromPath(modelNameOrURL)+"/saved_model")
+//                    .optTranslator(new ObjectDetectorTranslator())
+//                    .optEngine("TensorFlow")
+//                    .build();
         }
 
         ZooModel<Image, DetectedObjects> model = null;
@@ -183,8 +175,7 @@ public class ObjectDetector {
     }
 
     // Experimental WIP function
-    // To implement a custom saveBoundingBoxImage function instead of passing it as an option
-    // to use DJL native function in .detect()
+    // To implement a custom saveBoundingBoxImage function instead of passing it as an option in .predict()
     /**
      * Convert objects in MLObject[] to DetectedObjects
      * @param objectList, originalImgWidth, originalImgHeight
@@ -211,14 +202,13 @@ public class ObjectDetector {
      * @param pImg
      * @return MLObject[]
      */
-    public MLObject[] detect(PImage pImg) {
+    public MLObject[] predict(PImage pImg) {
         // get original image size
         int originalImgWidth = pImg.width;
         int originalImgHeight = pImg.height;
         // convert PImage to DJL Image
         BufferedImage buffImg = ProcessingUtils.PImageToBuffImage(pImg);
         Image img = ImageFactory.getInstance().fromImage(buffImg);
-
         // detect objects
         DetectedObjects objects = null;
         try {
@@ -230,14 +220,12 @@ public class ObjectDetector {
         MLObject[] objectList = DetectedObjectsToMLObjects(objects, originalImgWidth, originalImgHeight);
         return objectList;
     }
-
-
     /**
      * Run object detection on given PImage and save output image
      * @param pImg, saveOutputImg, fileName
      * @return MLObject[]
      */
-    public MLObject[] detect(PImage pImg, Boolean saveBoundingBoxImage, String fileName) {
+    public MLObject[] predict(PImage pImg, String fileName) {
         // get original image size
         int originalImgWidth = pImg.width;
         int originalImgHeight = pImg.height;
@@ -251,33 +239,12 @@ public class ObjectDetector {
         } catch (TranslateException e) {
             throw new RuntimeException(e);
         }
-        // save bounding box image
-        if (saveBoundingBoxImage == true) {
+        // save bounding box image if file name is not null or empty
+        if (fileName != null && !fileName.isEmpty() && !fileName.trim().isEmpty()) {
             DJLUtils.saveBoundingBoxImage(this.parent, fileName, img, objects);
         }
         // parse DetectedObjects to a list of MLObject
         MLObject[] objectList = DetectedObjectsToMLObjects(objects, originalImgWidth, originalImgHeight);
         return objectList;
     }
-
-    public void drawBoundingBoxes(PImage pImg, DetectedObjects detectedObjects) {
-        // convert PImage to DJL Image
-        BufferedImage buffImg = ProcessingUtils.PImageToBuffImage(pImg);
-        Image img = ImageFactory.getInstance().fromImage(buffImg);
-
-        img.drawBoundingBoxes(detectedObjects);
-//        img.save();
-    }
-
-//    public void saveBoundingBoxImage(PImage pImg, MLObject[] objectList, String fileName) {
-//        // get original image size
-//        int originalImgWidth = pImg.width;
-//        int originalImgHeight = pImg.height;
-//        // convert PImage to DJL Image
-//        BufferedImage buffImg = ProcessingUtils.PImageToBuffImage(pImg);
-//        Image img = ImageFactory.getInstance().fromImage(buffImg);
-//
-//        DetectedObjects objects = DetectedObjectsToMLObjects(objectList, originalImgWidth, originalImgHeight);
-//        DJLUtils.saveBoundingBoxImage(this.parent, fileName, img, objects);
-//    }
 }

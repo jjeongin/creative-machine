@@ -29,7 +29,7 @@ void draw() {
   }
 
   // detect objects
-  MLObject[] output = detector.detect(cam);
+  MLObject[] output = detector.predict(cam);
   // draw bounding boxes of detected objects
   noFill();
   stroke(255, 0, 0);

@@ -19,7 +19,7 @@ void setup() {
 
     // run object detection and save output image
     outputName = "data/" + imgName + "_output_" + modelName + ".png";
-    output = detector.detect(img, true, outputName);
+    output = detector.predict(img, true, outputName);
     // print label and confidence of each object
     for (int i = 0; i < output.length; i++) {
         println(output[i].getLabel() + " detected! (confidence: " + output[i].getConfidence() + ")");

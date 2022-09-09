@@ -9,6 +9,7 @@ import processing.core.PApplet;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -27,26 +28,23 @@ public class DJLUtils {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
         // draw bounding boxes with DJL function
         img.drawBoundingBoxes(detected);
-
-        // set filename
+        // set output image name
         Path imagePath;
-        if (fileName != null) { // use user-specified filename
+        try {
             imagePath = outputDir.resolve(fileName);
         }
-        else { // if filename is null, use default filename
+        catch (InvalidPathException e) { // if file path is invalid, save as 'output.png'
             imagePath = outputDir.resolve("output.png");
         }
-
         // OpenJDK can't save jpg with alpha channel
         try {
             img.save(Files.newOutputStream(imagePath), "png");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        System.out.println("Output image has been saved in: " + imagePath);
+        System.out.println("Output image is saved in: " + imagePath);
     }
 
     public static <T, K> void printInputOutputInfo(ZooModel<T, K> model) {
