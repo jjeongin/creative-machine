@@ -2,9 +2,7 @@ package ml;
 
 import ai.djl.Application;
 import ai.djl.MalformedModelException;
-import ai.djl.ModelException;
 import ai.djl.inference.Predictor;
-import ai.djl.modality.Classifications;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
 import ai.djl.modality.cv.output.DetectedObjects;
@@ -30,15 +28,13 @@ import java.util.Collections;
 import java.util.List;
 
 import ml.util.ProcessingUtils;
-import ml.MLPose;
-import ml.MLKeyPoint;
 
-public class PoseNet {
+public class PoseDetector {
     PApplet parent; // reference to the parent sketch
     private Predictor<Image, Joints> predictor;
     private static final Logger logger =
-            LoggerFactory.getLogger(PoseNet.class);
-    public PoseNet(PApplet myParent) {
+            LoggerFactory.getLogger(ml.PoseDetector.class);
+    public PoseDetector(PApplet myParent) {
         this.parent = myParent;
         logger.info("model loading..");
         // initialize criteria to load the model
