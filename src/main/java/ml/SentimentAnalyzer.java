@@ -13,22 +13,18 @@ import org.slf4j.LoggerFactory;
 import processing.core.PApplet;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.List;
 
-import ml.translator.SentimentTranslator;
-import ml.MLLabel;
+import ml.translator.SentimentAnalyzerTranslator;
 import ml.util.ProcessingUtils;
 
-public class Sentiment {
+public class SentimentAnalyzer {
     PApplet parent; // reference to the parent sketch
     private Predictor<String, Classifications> predictor;
     private static final Logger logger =
-            LoggerFactory.getLogger(Sentiment.class);
+            LoggerFactory.getLogger(ml.SentimentAnalyzer.class);
 
-    public Sentiment(PApplet myParent) {
+    public SentimentAnalyzer(PApplet myParent) {
         this.parent = myParent;
         logger.info("model loading..");
         // DistilBERT base uncased finetuned SST-2: sentiment analysis model that returns negative and positive score of a input sentence
@@ -55,7 +51,7 @@ public class Sentiment {
                         .setTypes(String.class, Classifications.class)
                         .optModelUrls(modelURL)
                         .optModelName(ProcessingUtils.getFileNameFromPath(modelURL)+"/saved_model")
-                        .optTranslator(new SentimentTranslator())
+                        .optTranslator(new SentimentAnalyzerTranslator())
                         .optEngine("TensorFlow")
                         .build();
         // load the model

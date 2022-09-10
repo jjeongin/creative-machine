@@ -4,24 +4,19 @@ import ai.djl.Model;
 import ai.djl.modality.Classifications;
 import ai.djl.modality.nlp.DefaultVocabulary;
 import ai.djl.modality.nlp.Vocabulary;
-import ai.djl.modality.nlp.bert.BertFullTokenizer;
 import ai.djl.modality.nlp.bert.BertTokenizer;
 import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDList;
 import ai.djl.ndarray.NDManager;
-import ai.djl.ndarray.types.DataType;
 import ai.djl.translate.Translator;
 import ai.djl.translate.TranslatorContext;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
-import java.util.Dictionary;
 import java.util.List;
-import java.util.function.ToIntFunction;
-import java.util.stream.LongStream;
 
-public class SentimentTranslator implements Translator<String, Classifications> {
+public class SentimentAnalyzerTranslator implements Translator<String, Classifications> {
     private Vocabulary vocabulary;
     private BertTokenizer tokenizer;
 

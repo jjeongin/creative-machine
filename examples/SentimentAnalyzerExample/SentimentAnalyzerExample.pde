@@ -1,6 +1,6 @@
 import ml.*;
 
-Sentiment sentiment;
+SentimentAnalyzer analyzer;
 MLObject[] prediction;
 
 void setup() {
@@ -10,13 +10,13 @@ void setup() {
     textFont(font);
 
     // load model
-    sentiment = new Sentiment(this);
+    analyzer = new SentimentAnalyzer(this);
 
     // define input
     String input = "Machine Learning is fun.";
 
     // run sentiment analysis
-    prediction = sentiment.predict(input);
+    prediction = analyzer.predict(input);
 }
 
 void draw() {
