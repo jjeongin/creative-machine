@@ -185,6 +185,12 @@ public class FaceDetector {
         return faces;
     }
 
+    /**
+     * To resize the original input image to a square image
+     * since the RetinaFace model can only detect faces on square-sized (640x640) images
+     * @param orgImg : original input image
+     * @return squareImg : resized square image with remaining space left empty
+     */
     private PImage resizeToSquare(PImage orgImg) {
         // copy resized image to a new square image
         PImage squareImg = this.parent.createImage(640, 640, RGB);
