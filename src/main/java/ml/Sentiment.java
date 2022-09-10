@@ -28,39 +28,37 @@ public class Sentiment {
     private static final Logger logger =
             LoggerFactory.getLogger(Sentiment.class);
 
-    public Sentiment(PApplet myParent, String modelNameOrURL) {
+    public Sentiment(PApplet myParent) {
         this.parent = myParent;
         logger.info("model loading..");
-
-        if (modelNameOrURL.equals("distilbert")) {
-            modelNameOrURL = "https://www.dropbox.com/s/j8hkvqqm4a9awcy/distilbert-sst2.zip?dl=1";
-        }
-        else { // load model with remote url
-            // check if the URL is valid (source: https://stackoverflow.com/questions/2230676/how-to-check-for-a-valid-url-in-java)
-            URL url = null; // check for the URL protocol
-            try {
-                url = new URL(modelNameOrURL);
-            } catch (MalformedURLException e) {
-                throw new RuntimeException(e);
-            }
-            try {
-                url.toURI(); // extra check if the URI is valid
-            } catch (URISyntaxException e) {
-                throw new RuntimeException(e);
-            }
-            modelNameOrURL = String.valueOf(url);
-        }
-
+        // DistilBERT base uncased finetuned SST-2: sentiment analysis model that returns negative and positive score of a input sentence
+        // original model from https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english
+        String modelURL =  "https://www.dropbox.com/s/j8hkvqqm4a9awcy/distilbert-sst2.zip?dl=1";
+        // load a custom model with URL
+//        // check if the URL is valid (source: https://stackoverflow.com/questions/2230676/how-to-check-for-a-valid-url-in-java)
+//        URL url = null; // check for the URL protocol
+//        try {
+//            url = new URL(modelNameOrURL);
+//        } catch (MalformedURLException e) {
+//            throw new RuntimeException(e);
+//        }
+//        try {
+//            url.toURI(); // extra check if the URI is valid
+//        } catch (URISyntaxException e) {
+//            throw new RuntimeException(e);
+//        }
+//        modelNameOrURL = String.valueOf(url);
+        // initialize criteria to load the model
         Criteria<String, Classifications> criteria =
                 Criteria.builder()
                         .optApplication(Application.NLP.SENTIMENT_ANALYSIS)
                         .setTypes(String.class, Classifications.class)
-                        .optModelUrls(modelNameOrURL)
-                        .optModelName(ProcessingUtils.getFileNameFromPath(modelNameOrURL)+"/saved_model")
+                        .optModelUrls(modelURL)
+                        .optModelName(ProcessingUtils.getFileNameFromPath(modelURL)+"/saved_model")
                         .optTranslator(new SentimentTranslator())
                         .optEngine("TensorFlow")
                         .build();
-
+        // load the model
         ZooModel<String, Classifications> model = null;
         try {
             model = criteria.loadModel();
@@ -71,8 +69,8 @@ public class Sentiment {
         } catch (MalformedModelException e) {
             throw new RuntimeException(e);
         }
+        // initialize a predictor for the model
         this.predictor = model.newPredictor();
-
         logger.info("successfully loaded!");
     }
 

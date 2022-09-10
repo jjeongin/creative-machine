@@ -54,10 +54,9 @@ public class ObjectDetector {
     public ObjectDetector(PApplet myParent, String modelName) {
         this.parent = myParent;
         logger.info("model loading..");
-
-        // Select a model to use
+        // set a criteria to select a model to use
         Criteria<Image, DetectedObjects> criteria; // criteria for selecting the model
-        // Open SSD from TensorFlow engine
+        // SSD trained on open images dataset from TensorFlow engine
         if (modelName.equals("openimages_ssd")) {
             criteria = Criteria.builder()
                     .optApplication(Application.CV.OBJECT_DETECTION)
@@ -66,7 +65,7 @@ public class ObjectDetector {
                     .optEngine("TensorFlow")
                     .build();
         }
-        // Coco SSD from MXNet engine
+        // SSD trained on coco dataset from MXNet engine
         else if (modelName.equals("coco_ssd")) {
             criteria = Criteria.builder()
                     .optApplication(Application.CV.OBJECT_DETECTION)
@@ -76,6 +75,7 @@ public class ObjectDetector {
                     .optEngine("MXNet")
                     .build();
         }
+        // SSD trained on voc dataset from MXNet engine
         else if (modelName.equals("voc_ssd")) {
             criteria = Criteria.builder()
                     .optApplication(Application.CV.OBJECT_DETECTION)
@@ -86,7 +86,7 @@ public class ObjectDetector {
                     .optEngine("MXNet")
                     .build();
         }
-        // Yolo from MXNet engine
+        // Yolo trained on voc dataset from MXNet engine
         else if (modelName.equals("voc_yolo")) {
             criteria = Criteria.builder()
                     .optApplication(Application.CV.OBJECT_DETECTION)
@@ -96,6 +96,7 @@ public class ObjectDetector {
                     .optEngine("MXNet")
                     .build();
         }
+        // Yolo trained on coco dataset from MXNet engine
         else if (modelName.equals("coco_yolo")) {
             criteria = Criteria.builder()
                     .optApplication(Application.CV.OBJECT_DETECTION)
@@ -107,9 +108,9 @@ public class ObjectDetector {
         }
         else {
             throw new IllegalArgumentException("No model named \'" + modelName + "\'. Check http://jjeongin.github.io/creative-machine/reference/object-detector for available model options.");
-            // load custom model with URL
-            // if user passed remote URL or local file path
-//            // check if the URL is valid (source: https://stackoverflow.com/questions/2230676/how-to-check-for-a-valid-url-in-java)
+            // load a custom model with URL
+            // if user passed a remote URL or local file path
+//          // check if the URL is valid (source: https://stackoverflow.com/questions/2230676/how-to-check-for-a-valid-url-in-java)
 //            URL url = null; // check for the URL protocol
 //            try {
 //                url = new URL(modelNameOrURL);
@@ -131,7 +132,7 @@ public class ObjectDetector {
 //                    .optEngine("TensorFlow")
 //                    .build();
         }
-
+        // load the model
         ZooModel<Image, DetectedObjects> model = null;
         try {
             model = criteria.loadModel();
@@ -142,8 +143,8 @@ public class ObjectDetector {
         } catch (MalformedModelException e) {
             throw new RuntimeException(e);
         }
+        // initialize a predictor for the model
         this.predictor = model.newPredictor();
-
         logger.info("successfully loaded!");
     }
 

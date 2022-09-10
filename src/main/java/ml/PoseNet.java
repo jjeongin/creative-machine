@@ -36,17 +36,13 @@ import ml.MLKeyPoint;
 public class PoseNet {
     PApplet parent; // reference to the parent sketch
     private Predictor<Image, Joints> predictor;
-
     private static final Logger logger =
             LoggerFactory.getLogger(PoseNet.class);
-
-    public PoseNet(PApplet myParent, String modelNameOrURL) {
+    public PoseNet(PApplet myParent) {
         this.parent = myParent;
         logger.info("model loading..");
-
-        Criteria<Image, Joints> criteria = null;
-        if (modelNameOrURL.equals("ResNet")) {
-            criteria = Criteria.builder()
+        // initialize criteria to load the model
+        Criteria<Image, Joints> criteria = Criteria.builder()
                     .optApplication(Application.CV.POSE_ESTIMATION)
                     .setTypes(Image.class, Joints.class)
                     .optFilter("backbone", "resnet18")
@@ -54,11 +50,10 @@ public class PoseNet {
                     .optFilter("dataset", "imagenet")
                     .optEngine("MXNet")
                     .build();
-        }
-
-        ZooModel<Image, Joints> pose = null;
+        // load the model
+        ZooModel<Image, Joints> model = null;
         try {
-            pose = criteria.loadModel();
+            model = criteria.loadModel();
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (ModelNotFoundException e) {
@@ -66,8 +61,8 @@ public class PoseNet {
         } catch (MalformedModelException e) {
             throw new RuntimeException(e);
         }
-        this.predictor = pose.newPredictor();
-
+        // initialize a predictor for the model
+        this.predictor = model.newPredictor();
         logger.info("successfully loaded!");
     }
 
@@ -75,7 +70,6 @@ public class PoseNet {
         List<Joints.Joint> jointList = joints.getJoints();
         int numJoints = jointList.size();
         List<MLKeyPoint> keypoints = new ArrayList<MLKeyPoint>();
-
         for (int i = 0; i < numJoints; i++) {
             // retrieve information from a key point
             float x = (float) jointList.get(i).getX();
@@ -88,7 +82,6 @@ public class PoseNet {
             MLKeyPoint keypoint = new MLKeyPoint(x, y, confidence);
             keypoints.add(keypoint);
         }
-
         MLPose pose = new MLPose(keypoints);
         return pose;
     }
@@ -122,7 +115,7 @@ public class PoseNet {
     }
 
     private Rectangle predictPersonInImage(Image img) {
-        // load object detection model
+        // set a criteria to load an object detection model
         Criteria<Image, DetectedObjects> criteria =
                 Criteria.builder()
                         .optApplication(Application.CV.OBJECT_DETECTION)
@@ -133,12 +126,11 @@ public class PoseNet {
                         .optFilter("dataset", "voc")
                         .optEngine("MXNet")
                         .build();
-
-        // detect objects
+        // run object detection
         DetectedObjects detectedObjects;
-        try (ZooModel<Image, DetectedObjects> ssd = criteria.loadModel()) {
-            try (Predictor<Image, DetectedObjects> predictor = ssd.newPredictor()) {
-                detectedObjects = predictor.predict(img);
+        try (ZooModel<Image, DetectedObjects> ssd = criteria.loadModel()) { // load the model
+            try (Predictor<Image, DetectedObjects> predictor = ssd.newPredictor()) { // create a predictor
+                detectedObjects = predictor.predict(img); // detect objects in image
             } catch (TranslateException e) {
                 throw new RuntimeException(e);
             }
@@ -149,7 +141,6 @@ public class PoseNet {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
         // crop out a person
         List<DetectedObjects.DetectedObject> items = detectedObjects.items();
         for (DetectedObjects.DetectedObject item : items) {
@@ -180,9 +171,7 @@ public class PoseNet {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
         img.drawJoints(joints); // draw joints on the person image
-
         String fileName = "joints.png";
         Path imagePath = outputDir.resolve(fileName);
         // OpenJDK can't save jpg with alpha channel

@@ -30,13 +30,12 @@ public class ImageClassifier {
     private static final Logger logger =
             LoggerFactory.getLogger(ImageClassifier.class);
 
-    public ImageClassifier(PApplet myParent, String modelNameOrURL) {
+    public ImageClassifier(PApplet myParent, String modelName) {
         this.parent = myParent;
         logger.info("model loading..");
-
-        // Select a model to use
+        // set a criteria to select a model to use
         Criteria<Image, Classifications> criteria = null;
-        if (modelNameOrURL.equals("MobileNet")) {
+        if (modelName.equals("MobileNet")) {
             criteria = Criteria.builder()
                     .optApplication(Application.CV.IMAGE_CLASSIFICATION)
                     .setTypes(Image.class, Classifications.class)
@@ -44,16 +43,19 @@ public class ImageClassifier {
                     .optEngine("MXNet")
                     .build();
         }
-        else if (modelNameOrURL.equals("Darknet")) {
+        else if (modelName.equals("Darknet")) {
             criteria = Criteria.builder()
                     .optApplication(Application.CV.IMAGE_CLASSIFICATION)
                     .setTypes(Image.class, Classifications.class)
-                    .optFilter("layers", "53") // can we use model name directly ??
+                    .optFilter("layers", "53")
                     .optFilter("flavor", "v3")
                     .optEngine("MXNet")
                     .build();
         }
-
+        else {
+            throw new IllegalArgumentException("No model named \'" + modelName + "\'. Check http://jjeongin.github.io/creative-machine/reference/image-classifier for available model options.");
+        }
+        // load the model
         ZooModel<Image, Classifications> model = null;
         try {
             model = criteria.loadModel();
@@ -64,8 +66,8 @@ public class ImageClassifier {
         } catch (MalformedModelException e) {
             throw new RuntimeException(e);
         }
+        // initialize a predictor for the model
         this.predictor = model.newPredictor();
-
         logger.info("successfully loaded!");
     }
 
