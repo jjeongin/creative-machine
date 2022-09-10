@@ -67,7 +67,7 @@ public class PoseDetector {
     private MLPose JointsToMLPose(Joints joints, float personTopLeftX, float personTopLeftY, float personWidth, float personHeight) {
         List<Joints.Joint> jointList = joints.getJoints();
         int numJoints = jointList.size();
-        List<MLKeyPoint> keypoints = new ArrayList<MLKeyPoint>();
+        List<MLKeyPoint> keyPoints = new ArrayList<MLKeyPoint>();
         for (int i = 0; i < numJoints; i++) {
             // retrieve information from a key point
             float x = (float) jointList.get(i).getX();
@@ -76,10 +76,10 @@ public class PoseDetector {
             y = y * personHeight + personTopLeftY;
             float confidence = (float) jointList.get(i).getConfidence(); // get probability
             // add each object to the list as keypoint
-            MLKeyPoint keypoint = new MLKeyPoint(x, y, confidence);
-            keypoints.add(keypoint);
+            MLKeyPoint keyPoint = new MLKeyPoint(x, y, confidence);
+            keyPoints.add(keyPoint);
         }
-        MLPose pose = new MLPose(keypoints);
+        MLPose pose = new MLPose(keyPoints);
         return pose;
     }
 
