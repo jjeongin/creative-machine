@@ -90,21 +90,21 @@ public class PoseDetector {
         int width = img.getWidth();
         int height = img.getHeight();
         Rectangle personRect = predictPersonInImage(img);
+        // throw error if no person is found
+        if (personRect == null) {
+//            logger.warn("No person found in image.");
+            return new MLPose(Collections.emptyList());
+        }
         // convert cropped rectangle to image
         float personTopLeftX = (float) personRect.getX() * width;
         float personTopLeftY = (float) personRect.getY() * height;
         float personWidth = (float) (personRect.getWidth() * width);
         float personHeight = (float) (personRect.getHeight() * height);
         Image personImg = img.getSubImage(
-                        (int) (personTopLeftX),
-                        (int) (personTopLeftY),
-                        (int) (personWidth),
-                        (int) (personHeight));
-        // throw error if person is not found
-        if (personImg == null) {
-            logger.warn("No person found in image.");
-            return new MLPose(Collections.emptyList());
-        }
+                        (int) (Math.max(personTopLeftX, 0)),
+                        (int) (Math.max(personTopLeftY, 0)),
+                        (int) (Math.min(personWidth, width - personTopLeftX)),
+                        (int) (Math.min(personHeight, height - personTopLeftY)));
         // detect pose on the person image
         Joints joints = predictJointsInPerson(personImg);
         MLPose pose = JointsToMLPose(joints, personTopLeftX, personTopLeftY, personWidth, personHeight);
