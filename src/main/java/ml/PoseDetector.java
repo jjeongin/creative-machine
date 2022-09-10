@@ -69,9 +69,7 @@ public class PoseDetector {
                 Criteria.builder()
                         .optApplication(Application.CV.OBJECT_DETECTION)
                         .setTypes(Image.class, DetectedObjects.class)
-                        .optFilter("size", "512")
-                        .optFilter("backbone", "resnet50")
-                        .optFilter("flavor", "v1")
+                        .optFilter("backbone", "mobilenet1.0")
                         .optFilter("dataset", "voc")
                         .optEngine("MXNet")
                         .build();
