@@ -1,6 +1,6 @@
 import ml.*;
 
-PoseNet poseNet;
+PoseDetector poseDetector;
 PImage img;
 MLPose pose;
 
@@ -9,23 +9,21 @@ public void setup() {
     background(255);
 
     // load model
-    poseNet = new PoseNet(this);
+    poseDetector = new PoseDetector(this);
 
     // load image
     img = loadImage("pose_soccer.png");
 
     // detect pose
-    pose = poseNet.predict(img);
+    pose = poseDetector.predict(img);
 }
 
 public void draw() {
     // display original image
     image(img, 0, 0);
-
     // plot each keypoint from the detected pose
     for (int i = 0; i < pose.getKeyPoints().size(); i++) {
         MLKeyPoint keypoint = pose.getKeyPoints().get(i);
-
         stroke(255, 0, 0);
         strokeWeight(10);
         point(keypoint.getX(), keypoint.getY());
