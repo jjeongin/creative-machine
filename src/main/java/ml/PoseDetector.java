@@ -34,11 +34,13 @@ import ml.MLKeyPoint;
 public class PoseDetector {
     PApplet parent; // reference to the parent sketch
     private Predictor<Image, Joints> predictor;
+    private Predictor<Image, DetectedObjects> objectDetectorPredictor;
     private static final Logger logger =
             LoggerFactory.getLogger(ml.PoseDetector.class);
     public PoseDetector(PApplet myParent) {
         this.parent = myParent;
         logger.info("model loading..");
+        // load pose detector model
         // initialize criteria to load the model
         Criteria<Image, Joints> criteria = Criteria.builder()
                     .optApplication(Application.CV.POSE_ESTIMATION)
@@ -61,6 +63,31 @@ public class PoseDetector {
         }
         // initialize a predictor for the model
         this.predictor = model.newPredictor();
+        // load object detector model
+        // set a criteria to load an object detection model
+        Criteria<Image, DetectedObjects> objectDetectorCriteria =
+                Criteria.builder()
+                        .optApplication(Application.CV.OBJECT_DETECTION)
+                        .setTypes(Image.class, DetectedObjects.class)
+                        .optFilter("size", "512")
+                        .optFilter("backbone", "resnet50")
+                        .optFilter("flavor", "v1")
+                        .optFilter("dataset", "voc")
+                        .optEngine("MXNet")
+                        .build();
+        // load the model
+        ZooModel<Image, DetectedObjects> objectDetectorModel = null;
+        try {
+            objectDetectorModel = objectDetectorCriteria.loadModel();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (ModelNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (MalformedModelException e) {
+            throw new RuntimeException(e);
+        }
+        // initialize a predictor for the model
+        this.objectDetectorPredictor = objectDetectorModel.newPredictor();
         logger.info("successfully loaded!");
     }
 
@@ -112,30 +139,11 @@ public class PoseDetector {
     }
 
     private Rectangle predictPersonInImage(Image img) {
-        // set a criteria to load an object detection model
-        Criteria<Image, DetectedObjects> criteria =
-                Criteria.builder()
-                        .optApplication(Application.CV.OBJECT_DETECTION)
-                        .setTypes(Image.class, DetectedObjects.class)
-                        .optFilter("size", "512")
-                        .optFilter("backbone", "resnet50")
-                        .optFilter("flavor", "v1")
-                        .optFilter("dataset", "voc")
-                        .optEngine("MXNet")
-                        .build();
-        // run object detection
-        DetectedObjects detectedObjects;
-        try (ZooModel<Image, DetectedObjects> ssd = criteria.loadModel()) { // load the model
-            try (Predictor<Image, DetectedObjects> predictor = ssd.newPredictor()) { // create a predictor
-                detectedObjects = predictor.predict(img); // detect objects in image
-            } catch (TranslateException e) {
-                throw new RuntimeException(e);
-            }
-        } catch (ModelNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (MalformedModelException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
+        // detect objects in image
+        DetectedObjects detectedObjects = null;
+        try {
+            detectedObjects = this.objectDetectorPredictor.predict(img);
+        } catch (TranslateException e) {
             throw new RuntimeException(e);
         }
         // crop out a person
