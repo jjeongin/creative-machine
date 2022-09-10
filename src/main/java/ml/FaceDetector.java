@@ -33,8 +33,6 @@ import ml.translator.FaceLandmarkTranslator;
 import ml.util.DJLUtils;
 import ml.util.ProcessingUtils;
 
-import processing.core.PVector;
-
 import static processing.core.PConstants.RGB;
 
 public class FaceDetector {

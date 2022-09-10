@@ -17,6 +17,7 @@ import java.util.List;
 
 import ml.translator.SentimentAnalyzerTranslator;
 import ml.util.ProcessingUtils;
+import ml.MLLabel;
 
 public class SentimentAnalyzer {
     PApplet parent; // reference to the parent sketch
