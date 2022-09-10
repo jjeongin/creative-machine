@@ -256,7 +256,7 @@ public class FaceDetector {
             throw new RuntimeException(e);
         }
         // convert DJL DetectedObjects to MLFace
-        MLFace[] detectedList = DetectedObjectsToMLFaces(detected, pImg.width, pImg.height);;
+        MLFace[] detectedList = DetectedObjectsToMLFaces(detected, pImg.width, pImg.height);
 //        if (detected != null) {
 //            // detect extra 68 landmarks if detectLandmarksOrNot is true
 //            if (this.detectLandmarksOrNot == true) {
