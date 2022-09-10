@@ -28,6 +28,8 @@ import java.util.Collections;
 import java.util.List;
 
 import ml.util.ProcessingUtils;
+import ml.MLPose;
+import ml.MLKeyPoint;
 
 public class PoseDetector {
     PApplet parent; // reference to the parent sketch
@@ -62,7 +64,7 @@ public class PoseDetector {
         logger.info("successfully loaded!");
     }
 
-    private MLPose parseJoints(Joints joints, float personTopLeftX, float personTopLeftY, float personWidth, float personHeight) {
+    private MLPose JointsToMLPose(Joints joints, float personTopLeftX, float personTopLeftY, float personWidth, float personHeight) {
         List<Joints.Joint> jointList = joints.getJoints();
         int numJoints = jointList.size();
         List<MLKeyPoint> keypoints = new ArrayList<MLKeyPoint>();
@@ -73,7 +75,6 @@ public class PoseDetector {
             float y = (float) jointList.get(i).getY();
             y = y * personHeight + personTopLeftY;
             float confidence = (float) jointList.get(i).getConfidence(); // get probability
-
             // add each object to the list as keypoint
             MLKeyPoint keypoint = new MLKeyPoint(x, y, confidence);
             keypoints.add(keypoint);
@@ -106,7 +107,7 @@ public class PoseDetector {
         }
         // detect pose on the person image
         Joints joints = predictJointsInPerson(personImg);
-        MLPose pose = parseJoints(joints, personTopLeftX, personTopLeftY, personWidth, personHeight);
+        MLPose pose = JointsToMLPose(joints, personTopLeftX, personTopLeftY, personWidth, personHeight);
         return pose;
     }
 
@@ -157,25 +158,5 @@ public class PoseDetector {
             throw new RuntimeException(e);
         }
         return joints;
-    }
-
-    private void saveJointsImage(Image img, Joints joints) {
-        // Default output path is parent sketch directory
-        Path outputDir = Paths.get(this.parent.sketchPath());
-        try {
-            Files.createDirectories(outputDir);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        img.drawJoints(joints); // draw joints on the person image
-        String fileName = "joints.png";
-        Path imagePath = outputDir.resolve(fileName);
-        // OpenJDK can't save jpg with alpha channel
-        try {
-            img.save(Files.newOutputStream(imagePath), "png");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        logger.info("Detected pose image has been saved in: {}", imagePath);
     }
 }
