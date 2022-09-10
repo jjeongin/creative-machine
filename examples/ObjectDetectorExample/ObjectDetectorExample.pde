@@ -6,11 +6,12 @@ MLObject[] output;
 
 void setup() {
     size(768, 576);
-    // load an object detector
     // * Model Options
     // - SSD Models: "openimages_ssd", "coco_ssd", "voc_ssd"
     // - YOLO Models: "coco_yolo", "voc_yolo"
-    String modelName = "coco_ssd"; // choose the model you want to use
+    // choose the model you want to use
+    String modelName = "coco_ssd";
+    // load an object detector
     detector = new ObjectDetector(this, modelName);
     // load an input image
     String imgName = "dog_bike_car"; // "dog_bike_car" or "kite_people"

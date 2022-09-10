@@ -6,11 +6,12 @@ ObjectDetector detector;
 
 void setup() {
   size(600, 400);
-  // load an object detector
   // * Model Options
   // - SSD Models: "openimages_ssd", "coco_ssd", "voc_ssd"
   // - YOLO Models: "coco_yolo", "voc_yolo"
-  String modelName = "coco_ssd"; // choose the model you want to use
+  // choose a model you want to use
+  String modelName = "voc_ssd"; // for videos, "voc_ssd" and "voc_yolo" are the fastest
+  // load an object detector
   detector = new ObjectDetector(this, modelName);
   // load and start the camera
   cam = new Capture(this, "pipeline:autovideosrc");
