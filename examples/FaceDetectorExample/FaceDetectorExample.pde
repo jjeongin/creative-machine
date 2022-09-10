@@ -15,7 +15,7 @@ void setup() {
     img = loadImage("largest_selfie.jpeg");
 
     // detect faces
-    faces = detector.detect(img);
+    faces = detector.predict(img);
 }
 
 void draw() {

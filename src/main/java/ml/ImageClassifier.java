@@ -87,7 +87,7 @@ public class ImageClassifier {
         return labels;
     }
 
-    public MLLabel[] classify(PImage pImg) {
+    public MLLabel[] predict(PImage pImg) {
         // convert PImage to DJL Image
         BufferedImage buffImg = ProcessingUtils.PImageToBuffImage(pImg);
         Image img = ImageFactory.getInstance().fromImage(buffImg);

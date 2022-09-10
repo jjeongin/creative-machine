@@ -16,7 +16,7 @@ void setup() {
     img = loadImage("bird.jpeg");
 
     // classify
-    results = classifier.classify(img);
+    results = classifier.predict(img);
 
     // print all the labels (by default, results contain top 5 labels with the highest confidence)
     for (int i = 0; i < results.length; i++) {

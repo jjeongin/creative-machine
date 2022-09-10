@@ -238,7 +238,7 @@ public class FaceDetector {
 //        return faces;
 //    }
 
-    public MLFace[] detect(PImage pImg) {
+    public MLFace[] predict(PImage pImg) {
         // resize original image to square
         PImage squareImg = resizeToSquare(pImg);
         // convert PImage to Image

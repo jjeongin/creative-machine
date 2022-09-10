@@ -25,7 +25,7 @@ void draw() {
   }
 
   // detect faces
-  MLFace[] faces = detector.detect(cam);
+  MLFace[] faces = detector.predict(cam);
   // draw bounding boxes of detected faces
   for (int i = 0; i < faces.length; i++) {
     // get each face

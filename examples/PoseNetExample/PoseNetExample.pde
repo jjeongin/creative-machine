@@ -9,7 +9,7 @@ public void setup() {
     background(255);
 
     // load model
-    poseNet = new PoseNet(this, "ResNet");
+    poseNet = new PoseNet(this);
 
     // load image
     img = loadImage("pose_soccer.png");
