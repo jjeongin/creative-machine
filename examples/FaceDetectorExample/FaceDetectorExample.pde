@@ -28,12 +28,12 @@ void draw() {
         noFill();
         stroke(243, 176, 255);
         rect(face.getX(), face.getY(), face.getWidth(), face.getHeight());
-        // draw landmarks
+        // draw each facial landmark
         noStroke();
         fill(255, 131, 110);
-        for (int j = 0; j < face.getLandmarks().size(); j++) {
-            MLKeyPoint landmark = face.getLandmarks().get(j);
-            circle(landmark.getX(), landmark.getY(), 5);
+        for (int j = 0; j < face.getKeyPoints().size(); j++) {
+            MLKeyPoint keyPoint = face.getKeyPoints().get(j);
+            circle(keyPoint.getX(), keyPoint.getY(), 5);
         }
     }
 }

@@ -28,9 +28,9 @@ public void draw() {
   MLPose pose = poseDetector.predict(cam);
   // plot each keypoint from the detected pose
   for (int i = 0; i < pose.getKeyPoints().size(); i++) {
-      MLKeyPoint keypoint = pose.getKeyPoints().get(i);
+      MLKeyPoint keyPoint = pose.getKeyPoints().get(i);
       stroke(255, 0, 0);
       strokeWeight(10);
-      point(keypoint.getX(), keypoint.getY());
+      point(keyPoint.getX(), keyPoint.getY());
   }
 }
