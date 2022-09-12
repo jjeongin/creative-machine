@@ -6,7 +6,6 @@ MLPose pose;
 
 public void setup() {
     size(1102, 932);
-    background(255);
 
     // load model
     poseDetector = new PoseDetector(this);
@@ -19,6 +18,7 @@ public void setup() {
 }
 
 public void draw() {
+    background(255);
     // display original image
     image(img, 0, 0);
     // plot each keypoint from the detected pose

@@ -14,7 +14,7 @@ void setup() {
   // load an object detector
   detector = new ObjectDetector(this, modelName);
   // load and start the camera
-  cam = new Capture(this, "pipeline:autovideosrc");
+  cam = new Capture(this, width, height);
   cam.start();
 }
 

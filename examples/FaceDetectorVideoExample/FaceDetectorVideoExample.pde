@@ -9,7 +9,7 @@ void setup() {
   // load face detector
   detector = new FaceDetector(this);
   // load and start camera
-  cam = new Capture(this);
+  cam = new Capture(this, width, height);
   cam.start();
 }
 

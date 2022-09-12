@@ -1,11 +1,11 @@
 import ml.*;
 
 SentimentAnalyzer analyzer;
-MLObject[] prediction;
+MLLabel[] prediction;
 
 void setup() {
     size(450, 250);
-    background(255);
+
     PFont font = createFont("Arial", 20);
     textFont(font);
 
@@ -20,6 +20,8 @@ void setup() {
 }
 
 void draw() {
+    background(255);
+
     // print Negative score (0 to 1)
     fill(0, 102, 153); // dark blue
     text(prediction[0].getLabel() + " Score: " + prediction[0].getConfidence(), 40, 70);

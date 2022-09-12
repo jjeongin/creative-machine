@@ -2,11 +2,10 @@ import ml.*;
 
 ImageClassifier classifier;
 PImage img;
-MLObject[] results;
+MLLabel[] results;
 
 void setup() {
     size(400, 450);
-    background(255);
 
     // load model
     String modelName = "Darknet"; // "MobileNet", "Darknet"
@@ -25,6 +24,7 @@ void setup() {
 }
 
 void draw() {
+    background(255);
     image(img, 0, 0);
     fill(0);
     textSize(15);
