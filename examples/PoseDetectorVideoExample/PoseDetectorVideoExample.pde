@@ -9,7 +9,7 @@ public void setup() {
   // load the model
   poseDetector = new PoseDetector(this);
   // load and start the camera
-  cam = new Capture(this);
+  cam = new Capture(this, width, height);
   cam.start();
 }
 
