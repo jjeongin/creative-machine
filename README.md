@@ -1,11 +1,11 @@
 # Creative Machine
 
-A Machine Learning for [Processing](https://processing.org/).
+A Machine Learning library for [Processing](https://processing.org/).
 
 ## Build
 - First, install [Adoptium OpenJDK 17](https://adoptium.net/) (required by Processing 4+)
 
-Run gradle to build a new release package under `/release/ml4processing.zip`:
+Run gradle to build a new release package under `/release/creative_machine.zip`:
 
 ```bash
 # windows
@@ -30,26 +30,35 @@ The library can be imported as an IntelliJ project following the steps below:
 
 ```
 import processing.core.*;
-import ml.ObjectDetector;
+import ml.*;
 
 public class DetectTest extends PApplet {
-    ObjectDetectorDJL detector;
-    PImage outputImg;
+    ObjectDetector detector;
+    PImage img;
 
     public void settings() {
         size(parseInt(args[0]), parseInt(args[1]));
     }
 
     public void setup() {
-        detector = new ObjectDetectorDJL(this, "mobilenet_v2");
-        PImage inputImage = loadImage("dog_bike_car.jpeg");
-        String detected = detector.detect(inputImage, true, "output.png");
-        println("Detected objects: " + detected);
-        outputImg = loadImage("output.png");
+        detector = new ObjectDetector(this, "coco_ssd");
+        img = loadImage("dog_bike_car.jpeg");
+        MLObject[] output = detector.detect(img, "output.png");
+        // print a label and confidence score of each object
+        for (int i = 0; i < output.length; i++) {
+            println(output[i].getLabel() + " detected! (confidence: " + output[i].getConfidence() + ")");
+        }
     }
 
     public void draw() {
-        image(outputImg, 0, 0);
+       // draw a bounding box of each object
+       image(img, 0, 0);
+       noFill();
+       stroke(255, 0, 0);
+       for (int i = 0; i < output.length; i++) {
+           MLObject obj = output[i];
+           rect(obj.getX(), obj.getY(), obj.getWidth(), obj.getHeight());
+       }
     }
 
     static public void main(String[] args) {
