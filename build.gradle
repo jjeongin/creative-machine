@@ -62,8 +62,8 @@ dependencies {
     implementation group: 'ai.djl.mxnet', name: 'mxnet-model-zoo', version: "$djlVersion"
 
     // GPU support
-    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cu113', version: "$djlTensorflowNativeVersion", classifier: 'linux-x86_64'
-    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cu113', version: "$djlTensorflowNativeVersion", classifier: 'win-x86_64'    
+//    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cu113', version: "$djlTensorflowNativeVersion", classifier: 'linux-x86_64'
+//    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cu113', version: "$djlTensorflowNativeVersion", classifier: 'win-x86_64'
     
     // deep java library
     // implementation fileTree(include: ["api-0.17.0.jar", "tensorflow-engine-0.17.0.jar",
