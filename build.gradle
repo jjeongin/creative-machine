@@ -5,7 +5,15 @@ plugins {
 }
 
 group "$packageName"
-version "$propertiesPrettyVersion"
+// read library version from library.properties file
+def libraryProperties = new Properties()
+def libraryPropertiesFile = rootProject.file('library.properties')
+if (libraryPropertiesFile.exists()) {
+    libraryPropertiesFile.withReader('UTF-8') { reader ->
+        libraryProperties.load(reader)
+    }
+}
+version = libraryProperties.getProperty('prettyVersion')
 
 sourceCompatibility = "$javaTargetVersion"
 
