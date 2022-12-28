@@ -1,8 +1,6 @@
 # Creative Machine
 
-A Machine Learning library for [Processing](https://processing.org/). Visit the [website](https://jjeongin.github.io/creative-machine/reference/tutorial) for more information about the library.
-
-![Creative Machine Logo](./images/creative-machine-logo.svg)
+A Machine Learning library for [Processing](https://processing.org/). Visit [Creative Machine website](https://jjeongin.github.io/creative-machine) for more information about the library.
 
 ## Install
 Install using the contribution manager in Processing application. 
@@ -12,7 +10,7 @@ Install using the contribution manager in Processing application.
 ![Install in Processing App](./images/install-screenshot.png)
 
 ## API Reference
-- Visit our [documentation website](https://jjeongin.github.io/creative-machine)
+Visit our [documentation website](https://jjeongin.github.io/creative-machine/reference/tutorial) 🤖
 
 ## Build
 - First, install [Adoptium OpenJDK 17](https://adoptium.net/) (required by Processing 4+)
