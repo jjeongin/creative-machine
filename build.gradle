@@ -46,20 +46,18 @@ dependencies {
 
     // test??
     // testImplementation group: 'junit', name: 'junit', version: '4.11'
-    // testImplementation 'com.github.cansik:webcam-capture-processing:8f1ea8d38d'
 
     // tensorflow
     // implementation group: 'org.tensorflow', name: 'tensorflow-core-platform', version: '0.4.1'
-
     implementation group: 'org.slf4j', name: 'slf4j-simple', version: "$slf4jVersion"
 
-    // DLJ
+    // DJL
     implementation group: 'ai.djl', name: 'api', version: "$djlVersion"
     implementation group: 'ai.djl.tensorflow', name: 'tensorflow-api', version: "$djlVersion"
     implementation group: 'ai.djl.tensorflow', name: 'tensorflow-engine', version: "$djlVersion"
     implementation group: 'ai.djl.tensorflow', name: 'tensorflow-model-zoo', version: "$djlVersion"
         
-    // DLJ tensorflow engine: http://djl.ai/engines/tensorflow/tensorflow-engine/
+    // DJL tensorflow engine: http://djl.ai/engines/tensorflow/tensorflow-engine/
     implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: "$djlTensorflowNativeVersion"
     // implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: "$djlTensorflowNativeVersion", classifier: 'osx-x86_64'
     // implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cpu', version: "$djlTensorflowNativeVersion", classifier: 'linux-x86_64'
@@ -68,6 +66,14 @@ dependencies {
     // DJL MXNet engine
     implementation group: 'ai.djl.mxnet', name: 'mxnet-engine', version: "$djlVersion"
     implementation group: 'ai.djl.mxnet', name: 'mxnet-model-zoo', version: "$djlVersion"
+
+    // DJL PyTorch engine
+//    implementation group: 'ai.djl.pytorch', name: 'pytorch-engine:0.23.0'
+//    implementation group: 'ai.djl.pytorch', name: 'pytorch-model-zoo:0.23.0'
+//    implementation group: 'ai.djl.pytorch', name: 'pytorch-native-cpu:2.0.1'
+    implementation 'ai.djl.pytorch:pytorch-engine:0.23.0'
+    implementation 'ai.djl.pytorch:pytorch-model-zoo:0.23.0'
+    implementation 'ai.djl.pytorch:pytorch-native-cpu:2.0.1'
 
     // GPU support
 //    implementation group: 'ai.djl.tensorflow', name: 'tensorflow-native-cu113', version: "$djlTensorflowNativeVersion", classifier: 'linux-x86_64'
